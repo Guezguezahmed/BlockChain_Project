@@ -1,30 +1,35 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:blockchain_app/data/repositories/mock_contract_repository.dart';
+import 'package:blockchain_app/data/wallet/mock_wallet_service.dart';
+import 'package:blockchain_app/presentation/providers/app_providers.dart';
+import 'package:blockchain_app/presentation/screens/home_screen.dart';
+import 'package:blockchain_app/presentation/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:blockchain_app/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Home shows brand and create CTA', (tester) async {
+    final wallet = MockWalletService();
+    final repo = MockContractRepository(txSender: wallet);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          walletServiceProvider.overrideWithValue(wallet),
+          chainTxSenderProvider.overrideWithValue(wallet),
+          contractRepositoryProvider.overrideWithValue(repo),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const HomeScreen(),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    expect(find.text('Contract Builder'), findsOneWidget);
+    expect(find.text('Create a contract'), findsOneWidget);
+    expect(find.textContaining('My contracts'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    wallet.dispose();
   });
 }

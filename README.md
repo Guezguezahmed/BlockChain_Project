@@ -9,18 +9,16 @@ Full rules and roadmap: [`AGENTS.md`](./AGENTS.md).
 | Path | Role |
 |---|---|
 | `contracts/` | Hardhat (Solidity ^0.8.24, ethers.js, OpenZeppelin) |
-| `backend/` | NestJS indexer + read-only REST (scaffold only in Phase 0/1) |
-| `app/` | Flutter client (scaffold only in Phase 0/1) |
+| `backend/` | NestJS indexer + read-only REST (Phase 3 — not started) |
+| `app/` | Flutter client (Phase 2 MVP) |
 | `docs/` | Write-up / diagrams |
 | `AGENTS.md` | Project brief (source of truth for assistants) |
 
-## Phase 0 + Phase 1 (current)
+## Phase status
 
-- Shared interface: `contracts/contracts/interfaces/IContracts.sol`
-- Implemented: `Escrow` template + `ContractFactory` (EIP-1167 clones)
-- Full Hardhat tests
-- Empty Flutter + NestJS scaffolds
-- **Not started:** Phase 2 app features, Phase 3 indexer, Sepolia production deploy
+- **Phase 0–1**: Escrow + `ContractFactory`, Hardhat tests, monorepo scaffold
+- **Phase 2 (current)**: Flutter MVP — wallet connect, Escrow form, My Contracts, detail actions via `ChainContractRepository` / mock
+- **Not started**: Phase 3 indexer, Phase 4 Explore, Sepolia production deploy (needs your secrets)
 
 ### Run contract tests
 
@@ -30,10 +28,20 @@ npm install
 npm test
 ```
 
+### Run Flutter app (mock by default)
+
+```bash
+cd app
+flutter pub get
+flutter run -d chrome
+```
+
+See [`app/README.md`](./app/README.md) for Sepolia + MetaMask (`FACTORY_ADDRESS`, `WALLETCONNECT_PROJECT_ID`).
+
 ### Optional Sepolia deploy
 
-Copy `.env.example` → `.env`, fill `SEPOLIA_RPC_URL` / `SEPOLIA_PRIVATE_KEY` / `ETHERSCAN_API_KEY`, then see `contracts/README.md`.
+Copy `.env.example` → `.env`, fill `SEPOLIA_RPC_URL` / `SEPOLIA_PRIVATE_KEY` / `ETHERSCAN_API_KEY`, then see `contracts/README.md`. After deploy, set the printed factory address as `FACTORY_ADDRESS` for the app.
 
 ## Next
 
-**Phase 2** (after approval): Flutter MVP — wallet connect, Escrow create form, My Contracts, detail actions via `ChainContractRepository` against Sepolia.
+**Phase 3**: NestJS event indexer + Mongo + `IndexedContractRepository` with chain fallback.
