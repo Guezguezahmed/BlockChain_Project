@@ -40,18 +40,29 @@ npm run deploy:sepolia
 
 ## Run (mock — default)
 
+On macOS (preferred for this project):
+
 ```bash
 cd app
 flutter pub get
-flutter run -d chrome
-# or: flutter run -d android / ios / linux
+flutter run -d macos
 ```
+
+Other devices if you need them:
+
+```bash
+flutter run -d ios        # Simulator / device
+flutter run -d android
+flutter run -d chrome     # optional; needs Flutter web enabled (`flutter config --enable-web`)
+```
+
+If you see `No macOS desktop project configured`, pull the latest Phase 2 branch — `app/macos/` is committed. To regenerate platforms without wiping Dart code: `flutter create . --platforms=macos,ios`.
 
 ## Run (Sepolia + MetaMask)
 
 ```bash
 cd app
-flutter run -d chrome \
+flutter run -d macos \
   --dart-define=USE_MOCK=false \
   --dart-define=FACTORY_ADDRESS=0xYourFactoryAddress \
   --dart-define=SEPOLIA_RPC_URL=https://rpc.sepolia.org \

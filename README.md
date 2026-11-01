@@ -33,10 +33,10 @@ npm test
 ```bash
 cd app
 flutter pub get
-flutter run -d chrome
+flutter run -d macos
 ```
 
-See [`app/README.md`](./app/README.md) for Sepolia + MetaMask (`FACTORY_ADDRESS`, `WALLETCONNECT_PROJECT_ID`).
+Chrome is optional (`flutter run -d chrome` if web is enabled). See [`app/README.md`](./app/README.md) for Sepolia + MetaMask (`FACTORY_ADDRESS`, `WALLETCONNECT_PROJECT_ID`).
 
 ### Optional Sepolia deploy
 
