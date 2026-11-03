@@ -12,16 +12,26 @@ import { ethers } from "hardhat";
  */
 async function main() {
   const [deployer] = await ethers.getSigners();
+  const network = await ethers.provider.getNetwork();
+  console.log("Network chainId:", network.chainId.toString());
   console.log("Deployer:", deployer.address);
+
+  if (network.chainId === 1n) {
+    throw new Error("Refusing to deploy on Ethereum mainnet (Sepolia only).");
+  }
 
   const Escrow = await ethers.getContractFactory("Escrow");
   const escrowImpl = await Escrow.deploy();
+  const escrowTx = escrowImpl.deploymentTransaction();
+  console.log("Escrow impl tx:", escrowTx?.hash ?? "(unknown)");
   await escrowImpl.waitForDeployment();
   const escrowImplAddress = await escrowImpl.getAddress();
   console.log("Escrow implementation:", escrowImplAddress);
 
   const Factory = await ethers.getContractFactory("ContractFactory");
   const factory = await Factory.deploy(escrowImplAddress);
+  const factoryTx = factory.deploymentTransaction();
+  console.log("Factory tx:", factoryTx?.hash ?? "(unknown)");
   await factory.waitForDeployment();
   const factoryAddress = await factory.getAddress();
   console.log("ContractFactory:", factoryAddress);
