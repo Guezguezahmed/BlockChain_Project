@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/models/escrow_actions.dart';
 import '../../domain/models/escrow_contract.dart';
-import '../../domain/models/escrow_state.dart';
 
 /// State- and role-aware action buttons (AGENTS.md §5).
 class EscrowActionBar extends StatelessWidget {
@@ -14,6 +14,7 @@ class EscrowActionBar extends StatelessWidget {
     required this.onRelease,
     required this.onRefundBySeller,
     required this.onRefundAfterDeadline,
+    this.nowUtc,
   });
 
   final EscrowContract contract;
@@ -24,6 +25,9 @@ class EscrowActionBar extends StatelessWidget {
   final VoidCallback onRefundBySeller;
   final VoidCallback onRefundAfterDeadline;
 
+  /// Injectable clock for tests (deadline reclaim).
+  final DateTime? nowUtc;
+
   @override
   Widget build(BuildContext context) {
     if (walletAddress == null) {
@@ -31,55 +35,20 @@ class EscrowActionBar extends StatelessWidget {
     }
     if (contract.state.isTerminal) {
       return Text(
-        'This escrow is ${contract.state.label.toLowerCase()} (final).',
+        'No further actions — this escrow is ${contract.state.label} (final).',
         style: Theme.of(context).textTheme.bodyMedium,
       );
     }
 
-    final isBuyer = contract.isBuyerOf(walletAddress);
-    final isSeller = contract.isSellerOf(walletAddress);
-    final deadlinePassed =
-        DateTime.now().toUtc().isAfter(contract.deadline) ||
-            DateTime.now().toUtc().isAtSameMomentAs(contract.deadline);
+    final actions = availableEscrowActions(
+      contract: contract,
+      walletAddress: walletAddress,
+      nowUtc: nowUtc,
+    );
 
-    final buttons = <Widget>[];
-
-    if (contract.state == EscrowState.created && isBuyer) {
-      buttons.add(
-        FilledButton(
-          onPressed: busy ? null : onFund,
-          child: const Text('Deposit (fund)'),
-        ),
-      );
-    }
-
-    if (contract.state == EscrowState.funded && isBuyer) {
-      buttons.add(
-        FilledButton(
-          onPressed: busy ? null : onRelease,
-          child: const Text('Release to seller'),
-        ),
-      );
-      if (deadlinePassed) {
-        buttons.add(
-          OutlinedButton(
-            onPressed: busy ? null : onRefundAfterDeadline,
-            child: const Text('Reclaim after deadline'),
-          ),
-        );
-      }
-    }
-
-    if (contract.state == EscrowState.funded && isSeller) {
-      buttons.add(
-        OutlinedButton(
-          onPressed: busy ? null : onRefundBySeller,
-          child: const Text('Refund buyer'),
-        ),
-      );
-    }
-
-    if (buttons.isEmpty) {
+    if (actions.isEmpty) {
+      final isBuyer = contract.isBuyerOf(walletAddress);
+      final isSeller = contract.isSellerOf(walletAddress);
       final role = isBuyer
           ? 'buyer'
           : isSeller
@@ -88,6 +57,40 @@ class EscrowActionBar extends StatelessWidget {
       return Text(
         'No actions available for you as $role in state ${contract.state.label}.',
       );
+    }
+
+    final buttons = <Widget>[];
+    for (final action in actions) {
+      switch (action) {
+        case EscrowActionKind.fund:
+          buttons.add(
+            FilledButton(
+              onPressed: busy ? null : onFund,
+              child: const Text('Deposit (fund)'),
+            ),
+          );
+        case EscrowActionKind.release:
+          buttons.add(
+            FilledButton(
+              onPressed: busy ? null : onRelease,
+              child: const Text('Release to seller'),
+            ),
+          );
+        case EscrowActionKind.refundAfterDeadline:
+          buttons.add(
+            OutlinedButton(
+              onPressed: busy ? null : onRefundAfterDeadline,
+              child: const Text('Reclaim after deadline'),
+            ),
+          );
+        case EscrowActionKind.refundBySeller:
+          buttons.add(
+            OutlinedButton(
+              onPressed: busy ? null : onRefundBySeller,
+              child: const Text('Refund buyer'),
+            ),
+          );
+      }
     }
 
     return Wrap(spacing: 12, runSpacing: 12, children: buttons);
