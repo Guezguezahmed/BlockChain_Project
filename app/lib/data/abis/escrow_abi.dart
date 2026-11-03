@@ -1,6 +1,7 @@
 // GENERATED from Hardhat artifact — do not edit by hand.
-// Source: contracts/artifacts/.../Escrow.json
+// Source: contracts/artifacts/contracts/templates/Escrow.sol/Escrow.json
 // Regenerate after ABI changes in contracts/interfaces/IContracts.sol.
+//   cd contracts && npx hardhat compile && node ../app/scripts/regen_abis.js
 
 const String kEscrowAbiJson = r'''[
   {

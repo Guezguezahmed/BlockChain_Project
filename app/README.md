@@ -12,31 +12,41 @@ Screens talk only to `ContractRepository`. Implementations:
 
 Wallet: **Reown AppKit (WalletConnect) → MetaMask**, Sepolia only. Mock mode uses a fake address.
 
+## Live Sepolia deployment (wired)
+
+| Contract | Address |
+|---|---|
+| **Factory** (`FACTORY_ADDRESS`) | `0x0E847b5Dccd09e73199e3689fC4D0D25A0133F08` |
+| Escrow implementation | `0x4bb80444D6669588F7bf1ed6b0EFE71B7Aacf25E` |
+
+Factory Etherscan: https://sepolia.etherscan.io/address/0x0E847b5Dccd09e73199e3689fC4D0D25A0133F08
+
+`AppConfig.factoryAddress` defaults to the live Factory. Mock mode remains the runtime default (`USE_MOCK=true`) so local UI work does not require Reown.
+
 ## Prerequisites
 
 - Flutter SDK ≥ 3.8 (`flutter --version`)
-- For chain mode: MetaMask (mobile or browser extension), Sepolia ETH, deployed `ContractFactory`
-- Reown Cloud project id: https://cloud.reown.com
+- For chain mode: MetaMask (mobile or browser extension), Sepolia ETH
+- **Reown Cloud project id** (required for chain mode): https://cloud.reown.com — create a project and copy the Project ID. **Do not invent one.**
 
 ## Configure (no secrets in git)
 
-Values are passed with `--dart-define` (or your IDE equivalent). See also repo-root `.env.example` for Hardhat deploy vars.
+Values are passed with `--dart-define` (or your IDE equivalent). See also repo-root `.env.example`.
 
 | Define | Default | Purpose |
 |---|---|---|
-| `USE_MOCK` | `true` | Use mock repo + mock wallet |
-| `FACTORY_ADDRESS` | empty | Sepolia `ContractFactory` address **after deploy** |
-| `SEPOLIA_RPC_URL` | `https://rpc.sepolia.org` | JSON-RPC |
-| `WALLETCONNECT_PROJECT_ID` | empty | Reown / WalletConnect project id |
+| `USE_MOCK` | `true` | Use mock repo + mock wallet. Set `false` for on-chain Sepolia. |
+| `FACTORY_ADDRESS` | live Factory above | Sepolia `ContractFactory` |
+| `SEPOLIA_RPC_URL` | `https://rpc.sepolia.org` | JSON-RPC (prefer Alchemy Sepolia if you have a key) |
+| `WALLETCONNECT_PROJECT_ID` | empty | **Required when `USE_MOCK=false`** — from https://cloud.reown.com |
 
-**Do not invent a factory address.** Deploy from `contracts/` first:
+### Where Ahmed puts the Reown project id
 
-```bash
-cd contracts
-cp ../.env.example ../.env   # fill SEPOLIA_RPC_URL + SEPOLIA_PRIVATE_KEY
-npm run deploy:sepolia
-# copy printed ContractFactory address into FACTORY_ADDRESS
-```
+1. Create a project at https://cloud.reown.com and copy the **Project ID**.
+2. Pass it only via `--dart-define=WALLETCONNECT_PROJECT_ID=...` (or your IDE Run Configuration / `launch.json` dart-defines).
+3. Never commit a real project id into `.env`, source, or this README.
+
+Without this id, chain-mode wallet connect fails with a clear error on the Wallet screen.
 
 ## Run (mock — default)
 
@@ -58,16 +68,18 @@ flutter run -d chrome     # optional; needs Flutter web enabled (`flutter config
 
 If you see `No macOS desktop project configured`, pull the latest Phase 2 branch — `app/macos/` is committed. To regenerate platforms without wiping Dart code: `flutter create . --platforms=macos,ios`.
 
-## Run (Sepolia + MetaMask)
+## Run (Sepolia + MetaMask — on-chain)
 
 ```bash
 cd app
 flutter run -d macos \
   --dart-define=USE_MOCK=false \
-  --dart-define=FACTORY_ADDRESS=0xYourFactoryAddress \
-  --dart-define=SEPOLIA_RPC_URL=https://rpc.sepolia.org \
-  --dart-define=WALLETCONNECT_PROJECT_ID=your_reown_project_id
+  --dart-define=FACTORY_ADDRESS=0x0E847b5Dccd09e73199e3689fC4D0D25A0133F08 \
+  --dart-define=SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/<YOUR_ALCHEMY_KEY> \
+  --dart-define=WALLETCONNECT_PROJECT_ID=<your_reown_project_id>
 ```
+
+`FACTORY_ADDRESS` may be omitted (defaults to the live Factory). `SEPOLIA_RPC_URL` may stay on the public default if you have no Alchemy key.
 
 Then: Wallet → Connect → MetaMask → Sepolia → Create Escrow → Deposit / Release / Refund.
 
@@ -82,7 +94,7 @@ flutter test
 
 ```
 lib/
-  config/           AppConfig (dart-defines)
+  config/           AppConfig (dart-defines + live Sepolia defaults)
   domain/           models, ContractRepository, WalletService
   data/
     abis/           Factory + Escrow ABI JSON (from Hardhat artifacts)
