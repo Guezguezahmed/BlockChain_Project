@@ -169,13 +169,28 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => launchUrl(
-                    Uri.parse(AppConfig.etherscanAddressUrl(c.address)),
-                    mode: LaunchMode.externalApplication,
-                  ),
-                  icon: const Icon(Icons.open_in_new, size: 18),
-                  label: const Text('Open on Etherscan'),
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => launchUrl(
+                        Uri.parse(AppConfig.etherscanAddressUrl(c.address)),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      icon: const Icon(Icons.open_in_new, size: 18),
+                      label: const Text('Open on Etherscan'),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => launchUrl(
+                        Uri.parse(
+                          'https://eth-sepolia.blockscout.com/address/${c.address}?tab=contract',
+                        ),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      icon: const Icon(Icons.open_in_new, size: 18),
+                      label: const Text('Open on Blockscout'),
+                    ),
+                  ],
                 ),
               ),
               const Divider(height: 32),
