@@ -115,8 +115,9 @@ class _ConfigErrorScaffold extends StatelessWidget {
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             const Text(
-              'See app/README.md for FACTORY_ADDRESS and '
-              'WALLETCONNECT_PROJECT_ID. Or run with the default USE_MOCK=true.',
+              'For Sepolia: USE_MOCK=false and '
+              'WALLETCONNECT_PROJECT_ID from https://cloud.reown.com '
+              '(see app/README.md). Or keep the default USE_MOCK=true.',
               textAlign: TextAlign.center,
             ),
           ],

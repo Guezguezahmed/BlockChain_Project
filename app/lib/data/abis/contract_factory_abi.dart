@@ -1,6 +1,7 @@
 // GENERATED from Hardhat artifact — do not edit by hand.
-// Source: contracts/artifacts/.../ContractFactory.json
+// Source: contracts/artifacts/contracts/ContractFactory.sol/ContractFactory.json
 // Regenerate after ABI changes in contracts/interfaces/IContracts.sol.
+//   cd contracts && npx hardhat compile && node ../app/scripts/regen_abis.js
 
 const String kContractFactoryAbiJson = r'''[
   {

@@ -18,7 +18,8 @@ Full rules and roadmap: [`AGENTS.md`](./AGENTS.md).
 
 - **Phase 0–1**: Escrow + `ContractFactory`, Hardhat tests, monorepo scaffold
 - **Phase 2 (current)**: Flutter MVP — wallet connect, Escrow form, My Contracts, detail actions via `ChainContractRepository` / mock
-- **Not started**: Phase 3 indexer, Phase 4 Explore, Sepolia production deploy (needs your secrets)
+- **Sepolia**: Factory `0x0E847b5Dccd09e73199e3689fC4D0D25A0133F08` (Escrow impl `0x4bb80444D6669588F7bf1ed6b0EFE71B7Aacf25E`) — Flutter chain mode wired; needs your Reown project id
+- **Not started**: Phase 3 indexer, Phase 4 Explore
 
 ### Run contract tests
 
@@ -36,11 +37,24 @@ flutter pub get
 flutter run -d macos
 ```
 
-Chrome is optional (`flutter run -d chrome` if web is enabled). See [`app/README.md`](./app/README.md) for Sepolia + MetaMask (`FACTORY_ADDRESS`, `WALLETCONNECT_PROJECT_ID`).
+Chrome is optional (`flutter run -d chrome` if web is enabled). See [`app/README.md`](./app/README.md) for Sepolia + MetaMask (`USE_MOCK=false`, `WALLETCONNECT_PROJECT_ID`).
 
-### Optional Sepolia deploy
+### Run Flutter against live Sepolia
 
-Copy `.env.example` → `.env`, fill `SEPOLIA_RPC_URL` / `SEPOLIA_PRIVATE_KEY` / `ETHERSCAN_API_KEY`, then see `contracts/README.md`. After deploy, set the printed factory address as `FACTORY_ADDRESS` for the app.
+```bash
+cd app
+flutter run -d macos \
+  --dart-define=USE_MOCK=false \
+  --dart-define=FACTORY_ADDRESS=0x0E847b5Dccd09e73199e3689fC4D0D25A0133F08 \
+  --dart-define=SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/<YOUR_ALCHEMY_KEY> \
+  --dart-define=WALLETCONNECT_PROJECT_ID=<your_reown_project_id>
+```
+
+Create the Reown project id at https://cloud.reown.com (do not invent one). Details: [`app/README.md`](./app/README.md).
+
+### Hardhat / verify (optional)
+
+Copy `.env.example` → `.env`, fill `SEPOLIA_RPC_URL` / `SEPOLIA_PRIVATE_KEY` / `ETHERSCAN_API_KEY`, then see `contracts/README.md`.
 
 ## Next
 

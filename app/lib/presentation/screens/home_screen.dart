@@ -121,7 +121,7 @@ class HomeScreen extends ConsumerWidget {
                             ? 'Mode: Mock repository (UI without chain)'
                             : AppConfig.hasFactoryAddress
                                 ? 'Mode: Sepolia · factory ${AppConfig.factoryAddress.substring(0, 10)}…'
-                                : 'Mode: Sepolia · set FACTORY_ADDRESS after deploy',
+                                : 'Mode: Sepolia · FACTORY_ADDRESS missing',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 12,

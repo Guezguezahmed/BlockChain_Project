@@ -63,8 +63,9 @@ class ChainContractRepository implements ContractRepository {
             factoryAddress ==
                 '0x0000000000000000000000000000000000000000')) {
       throw StateError(
-        'FACTORY_ADDRESS is not set. Deploy ContractFactory to Sepolia, then '
-        'pass --dart-define=FACTORY_ADDRESS=0x...',
+        'FACTORY_ADDRESS is not set. Pass '
+        '--dart-define=FACTORY_ADDRESS=0x0E847b5Dccd09e73199e3689fC4D0D25A0133F08 '
+        '(live Sepolia Factory) or your redeployed address.',
       );
     }
   }
