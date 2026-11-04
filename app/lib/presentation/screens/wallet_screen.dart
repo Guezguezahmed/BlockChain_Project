@@ -8,6 +8,8 @@ import '../../data/wallet/reown_wallet_service.dart';
 import '../../domain/utils/eth_formatting.dart';
 import '../providers/app_providers.dart';
 import '../widgets/sdt_faucet_note.dart';
+import '../widgets/wrong_network_banner.dart';
+import '../theme/app_theme.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key, this.embedded = false});
@@ -78,6 +80,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
       body: ListView(
         padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPad),
         children: [
+          const WrongNetworkBanner(),
+          const SizedBox(height: 8),
           Text(
             'Connect with MetaMask via Reown AppKit (WalletConnect). '
             'Private keys never leave your wallet.',
@@ -135,21 +139,47 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
               subtitle: Text(
                 session.isSepolia
                     ? '${AppConfig.networkName} (${session.chainId})'
-                    : 'Chain ${session.chainId} — switch to Sepolia',
+                    : 'Not Sepolia (chain ${session.chainId}). '
+                        'In MetaMask pick Sepolia, or tap the button.',
               ),
-              trailing: session.isSepolia
-                  ? null
-                  : TextButton(
-                      onPressed: () async {
+            ),
+            if (!session.isSepolia) ...[
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.orange.shade900,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: _busy
+                    ? null
+                    : () async {
+                        setState(() {
+                          _busy = true;
+                          _error = null;
+                        });
                         try {
                           await wallet.ensureSepolia();
                         } catch (e) {
                           setState(() => _error = _friendly(e));
+                        } finally {
+                          if (mounted) setState(() => _busy = false);
                         }
                       },
-                      child: const Text('Switch'),
-                    ),
-            ),
+                icon: const Icon(Icons.swap_horiz_rounded),
+                label: Text(
+                  _busy ? 'Switching…' : 'Switch MetaMask to Sepolia',
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tip: after you change account in MetaMask, it often jumps '
+                'back to Ethereum — always re-select Sepolia.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.ink.withValues(alpha: 0.55),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             ref.watch(sdtInfoProvider).when(
                   loading: () => const ListTile(
                     contentPadding: EdgeInsets.zero,

@@ -9,6 +9,7 @@ import '../widgets/listing_card.dart';
 import '../widgets/nft_art.dart';
 import '../widgets/public_notice_banner.dart';
 import '../widgets/wallet_status_chip.dart';
+import '../widgets/wrong_network_banner.dart';
 import 'listing_detail_screen.dart';
 
 /// Home tab: Smart Deal marketplace grid.
@@ -38,6 +39,7 @@ class HomeScreen extends ConsumerWidget {
       body: Column(
         children: [
           const PublicNoticeBanner(),
+          const WrongNetworkBanner(),
           Expanded(
             child: RefreshIndicator(
               color: AppTheme.accentDim,

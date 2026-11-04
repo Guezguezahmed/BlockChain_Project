@@ -8,6 +8,7 @@ import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nft_art.dart';
 import '../widgets/public_notice_banner.dart';
+import '../widgets/wrong_network_banner.dart';
 import 'list_nft_screen.dart';
 import 'listing_detail_screen.dart';
 import 'mint_nft_screen.dart';
@@ -35,6 +36,7 @@ class MyItemsScreen extends ConsumerWidget {
       body: Column(
         children: [
           const PublicNoticeBanner(),
+          const WrongNetworkBanner(),
           Expanded(
             child: address == null
                 ? _ConnectPrompt(
