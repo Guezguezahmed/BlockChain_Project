@@ -2,11 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/app_config.dart';
 import '../../data/repositories/chain_contract_repository.dart';
+import '../../data/repositories/chain_marketplace_repository.dart';
 import '../../data/repositories/mock_contract_repository.dart';
+import '../../data/repositories/mock_marketplace_repository.dart';
 import '../../data/wallet/mock_wallet_service.dart';
 import '../../data/wallet/reown_wallet_service.dart';
 import '../../domain/models/escrow_contract.dart';
+import '../../domain/models/marketplace_listing.dart';
 import '../../domain/repositories/contract_repository.dart';
+import '../../domain/repositories/marketplace_repository.dart';
 import '../../domain/wallet/wallet_session.dart';
 
 final walletServiceProvider = Provider<WalletService>((ref) {
@@ -31,6 +35,10 @@ final contractRepositoryProvider = Provider<ContractRepository>((ref) {
   throw UnimplementedError('Override contractRepositoryProvider in main()');
 });
 
+final marketplaceRepositoryProvider = Provider<MarketplaceRepository>((ref) {
+  throw UnimplementedError('Override marketplaceRepositoryProvider in main()');
+});
+
 final myContractsProvider =
     FutureProvider.autoDispose<List<EscrowContract>>((ref) async {
   final address = ref.watch(connectedAddressProvider);
@@ -43,11 +51,55 @@ final contractDetailProvider =
   return ref.watch(contractRepositoryProvider).getContract(address);
 });
 
+final marketplaceListingsProvider =
+    FutureProvider.autoDispose<List<MarketplaceListing>>((ref) {
+  return ref.watch(marketplaceRepositoryProvider).getListings(activeOnly: true);
+});
+
+final listingDetailProvider =
+    FutureProvider.autoDispose.family<MarketplaceListing, BigInt>((ref, id) {
+  return ref.watch(marketplaceRepositoryProvider).getListing(id);
+});
+
+final sdtInfoProvider =
+    FutureProvider.autoDispose<SdtMarketInfo?>((ref) async {
+  final address = ref.watch(connectedAddressProvider);
+  if (address == null) return null;
+  return ref.watch(marketplaceRepositoryProvider).getSdtInfo(address);
+});
+
+final ownedNftsProvider =
+    FutureProvider.autoDispose<List<BigInt>>((ref) async {
+  final address = ref.watch(connectedAddressProvider);
+  if (address == null) return const [];
+  return ref.watch(marketplaceRepositoryProvider).getOwnedTokenIds(address);
+});
+
+final myListingsProvider =
+    FutureProvider.autoDispose<List<MarketplaceListing>>((ref) async {
+  final address = ref.watch(connectedAddressProvider);
+  if (address == null) return const [];
+  final all = await ref
+      .watch(marketplaceRepositoryProvider)
+      .getListings(activeOnly: false);
+  final want = address.toLowerCase();
+  return all
+      .where((l) => l.seller.toLowerCase() == want)
+      .toList()
+    ..sort((a, b) => b.id.compareTo(a.id));
+});
+
+final tokenUriProvider =
+    FutureProvider.autoDispose.family<String?, BigInt>((ref, tokenId) {
+  return ref.watch(marketplaceRepositoryProvider).tokenUri(tokenId);
+});
+
 class AppDependencies {
   AppDependencies({
     required this.wallet,
     required this.txSender,
     required this.repository,
+    required this.marketplace,
     required this.dispose,
     this.reown,
   });
@@ -55,6 +107,7 @@ class AppDependencies {
   final WalletService wallet;
   final ChainTxSender txSender;
   final ContractRepository repository;
+  final MarketplaceRepository marketplace;
   final ReownWalletService? reown;
   final void Function() dispose;
 
@@ -62,6 +115,7 @@ class AppDependencies {
         walletServiceProvider.overrideWithValue(wallet),
         chainTxSenderProvider.overrideWithValue(txSender),
         contractRepositoryProvider.overrideWithValue(repository),
+        marketplaceRepositoryProvider.overrideWithValue(marketplace),
       ];
 }
 
@@ -74,19 +128,17 @@ AppDependencies createAppDependencies() {
         buyer: wallet.mockAddress,
         seller: '0x2222222222222222222222222222222222222222',
       );
+    final market = MockMarketplaceRepository(txSender: wallet);
     return AppDependencies(
       wallet: wallet,
       txSender: wallet,
       repository: repo,
+      marketplace: market,
       dispose: wallet.dispose,
     );
   }
 
   final reown = ReownWalletService();
-  if (!AppConfig.hasFactoryAddress) {
-    // Still construct a chain repo so the UI can show a clear config error;
-    // calls will throw with a helpful message.
-  }
   final repo = ChainContractRepository(
     factoryAddress: AppConfig.factoryAddress.isEmpty
         ? '0x0000000000000000000000000000000000000000'
@@ -94,13 +146,22 @@ AppDependencies createAppDependencies() {
     rpcUrl: AppConfig.sepoliaRpcUrl,
     txSender: reown,
   );
+  final market = ChainMarketplaceRepository(
+    marketplaceAddress: AppConfig.marketplaceAddress,
+    sdtAddress: AppConfig.sdtAddress,
+    nftAddress: AppConfig.nftAddress,
+    rpcUrl: AppConfig.sepoliaRpcUrl,
+    txSender: reown,
+  );
   return AppDependencies(
     wallet: reown,
     txSender: reown,
     repository: repo,
+    marketplace: market,
     reown: reown,
     dispose: () {
       repo.dispose();
+      market.dispose();
       reown.dispose();
     },
   );

@@ -29,7 +29,7 @@ class _AppRootState extends State<AppRoot> {
     return ProviderScope(
       overrides: _deps.overrides,
       child: MaterialApp(
-        title: 'Contract Builder',
+        title: 'Smart Deal',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         home: ReownBootstrap(reown: _deps.reown),

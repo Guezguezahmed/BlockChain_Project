@@ -50,8 +50,8 @@ class ReownWalletService implements WalletService, ChainTxSender {
       context: context,
       projectId: AppConfig.walletConnectProjectId,
       metadata: const PairingMetadata(
-        name: 'No-Code Contract Builder',
-        description: 'Decentralized escrow builder on Sepolia',
+        name: 'Smart Deal',
+        description: 'Peer NFT marketplace on Sepolia (SDT fees, ETH buys)',
         url: 'https://github.com/Guezguezahmed/BlockChain_Project',
         icons: [
           'https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Icon/Gradient/Icon.png',
@@ -87,8 +87,18 @@ class ReownWalletService implements WalletService, ChainTxSender {
     _syncFromModal();
   }
 
-  void _onConnect(ModalConnect? event) => _syncFromModal();
-  void _onUpdate(ModalConnect? event) => _syncFromModal();
+  void _onConnect(ModalConnect? event) {
+    _syncFromModal();
+    // Best-effort: prompt MetaMask back to Sepolia after connect / account change.
+    // ignore: discarded_futures
+    ensureSepolia().catchError((_) {});
+  }
+
+  void _onUpdate(ModalConnect? event) {
+    _syncFromModal();
+    // ignore: discarded_futures
+    ensureSepolia().catchError((_) {});
+  }
   void _onDisconnect(ModalDisconnect? event) {
     _session = null;
     _controller.add(null);

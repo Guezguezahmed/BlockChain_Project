@@ -1,25 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../config/app_config.dart';
+import '../../domain/utils/eth_formatting.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 
 class WalletStatusChip extends ConsumerWidget {
-  const WalletStatusChip({super.key, this.onTap});
+  const WalletStatusChip({
+    super.key,
+    this.onTap,
+    this.showSdt = false,
+  });
 
   final VoidCallback? onTap;
+  final bool showSdt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(walletSessionProvider).asData?.value ??
         ref.watch(walletServiceProvider).currentSession;
+    final sdt = showSdt ? ref.watch(sdtInfoProvider).asData?.value : null;
 
-    final label = session == null
-        ? 'Connect wallet'
-        : session.isSepolia
-            ? session.shortAddress
-            : 'Wrong network';
+    final wrongNetwork = session != null && !session.isSepolia;
+
+    final String label;
+    if (session == null) {
+      label = 'Connect';
+    } else if (wrongNetwork) {
+      // Never append "Sepolia" here — that read as "Wrong network Sepolia".
+      label = 'Switch to Sepolia';
+    } else {
+      label = session.shortAddress;
+    }
 
     return InkWell(
       onTap: onTap,
@@ -27,9 +39,15 @@ class WalletStatusChip extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
-          color: AppTheme.ink.withValues(alpha: 0.08),
+          color: wrongNetwork
+              ? Colors.orange.shade800.withValues(alpha: 0.12)
+              : AppTheme.ink.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.ink.withValues(alpha: 0.15)),
+          border: Border.all(
+            color: wrongNetwork
+                ? Colors.orange.shade800.withValues(alpha: 0.45)
+                : AppTheme.ink.withValues(alpha: 0.15),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -41,29 +59,31 @@ class WalletStatusChip extends ConsumerWidget {
               size: session == null ? 15 : 9,
               color: session == null
                   ? AppTheme.ink
-                  : session.isSepolia
-                      ? AppTheme.accent
-                      : Colors.orange.shade800,
+                  : wrongNetwork
+                      ? Colors.orange.shade800
+                      : AppTheme.accent,
             ),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
                 label,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                   letterSpacing: -0.1,
+                  color: wrongNetwork ? Colors.orange.shade900 : null,
                 ),
               ),
             ),
-            if (session != null) ...[
-              const SizedBox(width: 5),
+            if (session != null && !wrongNetwork && sdt != null) ...[
+              const SizedBox(width: 6),
               Text(
-                AppConfig.networkName,
+                '${formatWeiAsEth(sdt.balance, fractionDigits: 1)} SDT',
                 style: TextStyle(
                   fontSize: 11,
-                  color: AppTheme.ink.withValues(alpha: 0.55),
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.accentDim,
                 ),
               ),
             ],

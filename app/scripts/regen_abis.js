@@ -36,3 +36,18 @@ writeAbi(
   'app/lib/data/abis/escrow_abi.dart',
   'kEscrowAbiJson',
 );
+writeAbi(
+  'contracts/artifacts/contracts/Marketplace.sol/Marketplace.json',
+  'app/lib/data/abis/marketplace_abi.dart',
+  'kMarketplaceAbiJson',
+);
+writeAbi(
+  'contracts/artifacts/contracts/SmartDealNFT.sol/SmartDealNFT.json',
+  'app/lib/data/abis/smart_deal_nft_abi.dart',
+  'kSmartDealNftAbiJson',
+);
+writeAbi(
+  'contracts/artifacts/contracts/SDT.sol/SDT.json',
+  'app/lib/data/abis/sdt_abi.dart',
+  'kSdtAbiJson',
+);
