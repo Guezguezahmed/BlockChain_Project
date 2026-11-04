@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'config/app_config.dart';
 import 'data/wallet/reown_wallet_service.dart';
 import 'presentation/providers/app_providers.dart';
-import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/main_shell.dart';
 import 'presentation/theme/app_theme.dart';
 
 /// Root widget that owns [ProviderScope] overrides.
@@ -87,7 +87,7 @@ class _ReownBootstrapState extends State<ReownBootstrap> {
     if (_error != null && !AppConfig.useMock) {
       return _ConfigErrorScaffold(message: _error!);
     }
-    return const HomeScreen();
+    return const MainShell();
   }
 }
 

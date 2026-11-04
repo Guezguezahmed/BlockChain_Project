@@ -2,6 +2,18 @@
 
 Clean-architecture client for the Escrow preset on **Ethereum Sepolia**.
 
+## App shell (UI)
+
+Bottom navigation keeps the existing teal/sand palette:
+
+| Control | Role |
+|---|---|
+| **Home** | Compact brand hero + My contracts overview |
+| **+ FAB** (center) | Opens a half-screen template sheet (Escrow live; Rental / Milestone “Soon”) |
+| **Profile** | Wallet connect / disconnect (Reown or mock) |
+
+Create Escrow, contract detail, and explorer links still push as full screens on top of the shell. Chain mode (`USE_MOCK=false`) is unchanged.
+
 Screens talk only to `ContractRepository`. Implementations:
 
 | Class | Role |
@@ -65,6 +77,23 @@ flutter run -d ios        # Simulator / device
 flutter run -d android
 flutter run -d chrome     # optional; needs Flutter web enabled (`flutter config --enable-web`)
 ```
+
+### iPhone (physical device)
+
+On your Mac (signing / CocoaPods already set up from earlier launches):
+
+```bash
+cd ~/Desktop/BlockChain_Project/app   # or your local clone path
+git checkout main && git pull
+flutter pub get
+cd ios && pod install && cd ..
+flutter devices                          # note the iPhone id
+flutter run -d <IPHONE_DEVICE_ID>       # mock mode by default
+```
+
+Smoke-check on device: Home list → tap **+** → Escrow → create form → Profile (wallet) → open an escrow detail (Etherscan + Blockscout links).
+
+If the icon won’t open: Settings → General → VPN & Device Management → trust the Apple Development cert; enable Developer Mode if prompted.
 
 If you see `No macOS desktop project configured`, pull the latest Phase 2 branch — `app/macos/` is committed. To regenerate platforms without wiping Dart code: `flutter create . --platforms=macos,ios`.
 
