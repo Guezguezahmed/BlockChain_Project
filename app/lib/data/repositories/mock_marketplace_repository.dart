@@ -44,24 +44,54 @@ class MockMarketplaceRepository implements MarketplaceRepository {
     _sdtBalances[demoSeller.toLowerCase()] = BigInt.from(1000) * _oneEth;
     _sdtBalances[demoBuyer.toLowerCase()] = BigInt.from(200) * _oneEth;
 
+    // Token 1 stays with seller (inventory); 2–4 are listed (marketplace custody).
     _owners[BigInt.one] = demoSeller;
-    _uris[BigInt.one] = 'ipfs://demo/pack-1.json';
-    _owners[BigInt.two] = demoNft; // custodied by marketplace while listed
-    _uris[BigInt.two] = 'ipfs://demo/image-2.json';
+    _uris[BigInt.one] = 'Aurora Pack';
+    _owners[BigInt.two] = demoNft;
+    _uris[BigInt.two] = 'Teal Relic';
+    _owners[BigInt.from(3)] = demoNft;
+    _uris[BigInt.from(3)] = 'Sand Wave Pass';
+    _owners[BigInt.from(4)] = demoNft;
+    _uris[BigInt.from(4)] = 'Glass Key #04';
+    _owners[BigInt.from(5)] = demoBuyer;
+    _uris[BigInt.from(5)] = 'Collector Badge';
 
-    _listings[BigInt.one] = MarketplaceListing(
+    void addListing({
+      required BigInt id,
+      required BigInt tokenId,
+      required BigInt priceWei,
+    }) {
+      _listings[id] = MarketplaceListing(
+        id: id,
+        seller: demoSeller,
+        nft: demoNft,
+        tokenId: tokenId,
+        priceWei: priceWei,
+        stakeLocked: _sellerStake,
+        feePaid: _listingFee,
+        active: true,
+        tokenUri: _uris[tokenId],
+        currentNftOwner: demoNft,
+      );
+    }
+
+    addListing(
       id: BigInt.one,
-      seller: demoSeller,
-      nft: demoNft,
       tokenId: BigInt.two,
-      priceWei: BigInt.from(5) * BigInt.from(10).pow(16), // 0.05 ETH
-      stakeLocked: _sellerStake,
-      feePaid: _listingFee,
-      active: true,
-      tokenUri: _uris[BigInt.two],
-      currentNftOwner: demoNft,
+      priceWei: BigInt.from(5) * BigInt.from(10).pow(16), // 0.05
     );
-    _nextListingId = BigInt.two;
+    addListing(
+      id: BigInt.two,
+      tokenId: BigInt.from(3),
+      priceWei: BigInt.from(12) * BigInt.from(10).pow(16), // 0.12
+    );
+    addListing(
+      id: BigInt.from(3),
+      tokenId: BigInt.from(4),
+      priceWei: BigInt.from(8) * BigInt.from(10).pow(16), // 0.08
+    );
+    _nextListingId = BigInt.from(4);
+    _nextTokenId = BigInt.from(6);
   }
 
   void ensureConnectedHasSdt({BigInt? amount}) {

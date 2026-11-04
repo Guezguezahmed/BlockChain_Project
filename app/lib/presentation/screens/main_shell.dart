@@ -6,9 +6,10 @@ import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../widgets/create_template_sheet.dart';
 import 'home_screen.dart';
+import 'my_items_screen.dart';
 import 'wallet_screen.dart';
 
-/// App chrome: Home · center Create FAB · Profile, with pushed flows on top.
+/// App chrome: Market · My Items · center Sell FAB · Profile.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -29,10 +30,6 @@ class _MainShellState extends State<MainShell> {
     await showCreateTemplateSheet(context);
   }
 
-  void _goHome() => setState(() => _tab = 0);
-
-  void _goProfile() => setState(() => _tab = 1);
-
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
@@ -44,7 +41,11 @@ class _MainShellState extends State<MainShell> {
         children: [
           HomeScreen(
             onOpenCreate: _openCreate,
-            onOpenProfile: _goProfile,
+            onOpenProfile: () => setState(() => _tab = 2),
+          ),
+          MyItemsScreen(
+            onOpenCreate: _openCreate,
+            onOpenProfile: () => setState(() => _tab = 2),
           ),
           const WalletScreen(embedded: true),
         ],
@@ -83,11 +84,20 @@ class _MainShellState extends State<MainShell> {
                   children: [
                     Expanded(
                       child: _NavItem(
-                        icon: Icons.home_outlined,
-                        selectedIcon: Icons.home_rounded,
-                        label: 'Home',
+                        icon: Icons.storefront_outlined,
+                        selectedIcon: Icons.storefront_rounded,
+                        label: 'Market',
                         selected: _tab == 0,
-                        onTap: _goHome,
+                        onTap: () => setState(() => _tab = 0),
+                      ),
+                    ),
+                    Expanded(
+                      child: _NavItem(
+                        icon: Icons.inventory_2_outlined,
+                        selectedIcon: Icons.inventory_2_rounded,
+                        label: 'My Items',
+                        selected: _tab == 1,
+                        onTap: () => setState(() => _tab = 1),
                       ),
                     ),
                     const SizedBox(width: 72),
@@ -96,8 +106,8 @@ class _MainShellState extends State<MainShell> {
                         icon: Icons.account_balance_wallet_outlined,
                         selectedIcon: Icons.account_balance_wallet_rounded,
                         label: 'Profile',
-                        selected: _tab == 1,
-                        onTap: _goProfile,
+                        selected: _tab == 2,
+                        onTap: () => setState(() => _tab = 2),
                       ),
                     ),
                   ],

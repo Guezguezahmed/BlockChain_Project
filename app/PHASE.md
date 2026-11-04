@@ -1,4 +1,4 @@
-# App — Smart Deal marketplace (v0.4)
+# App — Smart Deal marketplace (v0.5)
 
 Implemented:
 

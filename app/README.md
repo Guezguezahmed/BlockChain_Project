@@ -8,9 +8,10 @@ Bottom navigation keeps the teal/sand glass chrome:
 
 | Control | Role |
 |---|---|
-| **Home** | Smart Deal hero + **Marketplace** listings feed |
-| **+ FAB** (center) | Mint demo NFT / list for ETH (Escrow advanced below) |
-| **Profile** | Wallet connect + demo SDT faucet note |
+| **Market** | Smart Deal hero + NFT card grid (image, title, ETH, seller) |
+| **My Items** | Owned NFTs + my listings inventory |
+| **+ FAB** (center) | Mint → approve SDT/NFT → list (Escrow under Advanced) |
+| **Profile** | Wallet connect, SDT balance, faucet note |
 
 ### Primary flow (MVP)
 

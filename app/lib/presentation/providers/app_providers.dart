@@ -75,6 +75,25 @@ final ownedNftsProvider =
   return ref.watch(marketplaceRepositoryProvider).getOwnedTokenIds(address);
 });
 
+final myListingsProvider =
+    FutureProvider.autoDispose<List<MarketplaceListing>>((ref) async {
+  final address = ref.watch(connectedAddressProvider);
+  if (address == null) return const [];
+  final all = await ref
+      .watch(marketplaceRepositoryProvider)
+      .getListings(activeOnly: false);
+  final want = address.toLowerCase();
+  return all
+      .where((l) => l.seller.toLowerCase() == want)
+      .toList()
+    ..sort((a, b) => b.id.compareTo(a.id));
+});
+
+final tokenUriProvider =
+    FutureProvider.autoDispose.family<String?, BigInt>((ref, tokenId) {
+  return ref.watch(marketplaceRepositoryProvider).tokenUri(tokenId);
+});
+
 class AppDependencies {
   AppDependencies({
     required this.wallet,

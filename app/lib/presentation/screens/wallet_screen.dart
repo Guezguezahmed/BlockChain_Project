@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/app_config.dart';
 import '../../data/wallet/reown_wallet_service.dart';
+import '../../domain/utils/eth_formatting.dart';
 import '../providers/app_providers.dart';
 import '../widgets/sdt_faucet_note.dart';
 
@@ -149,6 +150,29 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       child: const Text('Switch'),
                     ),
             ),
+            ref.watch(sdtInfoProvider).when(
+                  loading: () => const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('SDT balance'),
+                    subtitle: Text('Loading…'),
+                  ),
+                  error: (e, _) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('SDT balance'),
+                    subtitle: Text('$e'),
+                  ),
+                  data: (info) {
+                    if (info == null) return const SizedBox.shrink();
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('SDT balance'),
+                      subtitle: Text(
+                        '${formatWeiAsEth(info.balance)} SDT'
+                        '${info.lockedStake > BigInt.zero ? ' · locked stake ${formatWeiAsEth(info.lockedStake)}' : ''}',
+                      ),
+                    );
+                  },
+                ),
             OutlinedButton(
               onPressed: _disconnect,
               child: const Text('Disconnect'),

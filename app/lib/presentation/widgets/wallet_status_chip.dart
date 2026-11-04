@@ -2,24 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/app_config.dart';
+import '../../domain/utils/eth_formatting.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 
 class WalletStatusChip extends ConsumerWidget {
-  const WalletStatusChip({super.key, this.onTap});
+  const WalletStatusChip({
+    super.key,
+    this.onTap,
+    this.showSdt = false,
+  });
 
   final VoidCallback? onTap;
+  final bool showSdt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(walletSessionProvider).asData?.value ??
         ref.watch(walletServiceProvider).currentSession;
+    final sdt = showSdt ? ref.watch(sdtInfoProvider).asData?.value : null;
 
     final label = session == null
-        ? 'Connect wallet'
+        ? 'Connect'
         : session.isSepolia
             ? session.shortAddress
-            : 'Wrong network';
+            : 'Wrong net';
 
     return InkWell(
       onTap: onTap,
@@ -57,7 +64,17 @@ class WalletStatusChip extends ConsumerWidget {
                 ),
               ),
             ),
-            if (session != null) ...[
+            if (session != null && sdt != null) ...[
+              const SizedBox(width: 6),
+              Text(
+                '${formatWeiAsEth(sdt.balance, fractionDigits: 1)} SDT',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.accentDim,
+                ),
+              ),
+            ] else if (session != null) ...[
               const SizedBox(width: 5),
               Text(
                 AppConfig.networkName,

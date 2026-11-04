@@ -4,6 +4,7 @@ import 'package:blockchain_app/data/wallet/mock_wallet_service.dart';
 import 'package:blockchain_app/presentation/providers/app_providers.dart';
 import 'package:blockchain_app/presentation/screens/escrow_block_builder_screen.dart';
 import 'package:blockchain_app/presentation/screens/home_screen.dart';
+import 'package:blockchain_app/presentation/screens/listing_detail_screen.dart';
 import 'package:blockchain_app/presentation/screens/main_shell.dart';
 import 'package:blockchain_app/presentation/theme/app_theme.dart';
 import 'package:blockchain_app/presentation/widgets/create_template_sheet.dart';
@@ -38,24 +39,29 @@ void _iphoneSurface(WidgetTester tester) {
 }
 
 void main() {
-  testWidgets('Home shows Smart Deal marketplace brand', (tester) async {
+  testWidgets('Home shows Smart Deal marketplace brand and grid', (tester) async {
     _iphoneSurface(tester);
     await tester.pumpWidget(_scope(home: const HomeScreen()));
     await tester.pumpAndSettle();
 
     expect(find.text('Smart Deal'), findsOneWidget);
-    expect(find.text('Sell or mint'), findsOneWidget);
+    expect(find.text('Sell an NFT'), findsOneWidget);
     expect(find.text('Marketplace'), findsOneWidget);
-    expect(find.textContaining('Peer NFT marketplace'), findsOneWidget);
-    // Seeded mock listing appears.
-    expect(find.textContaining('Listing #1'), findsOneWidget);
+    expect(find.textContaining('Discover & trade'), findsOneWidget);
+    // Seeded mock listing cards (titles may be below fold on small phones —
+    // scroll the marketplace grid into view).
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
+    await tester.pumpAndSettle();
+    expect(find.text('Teal Relic'), findsWidgets);
   });
 
-  testWidgets('Main shell shows Home / Profile and sell FAB', (tester) async {
+  testWidgets('Main shell shows Market / My Items / Profile and sell FAB',
+      (tester) async {
     _iphoneSurface(tester);
     await tester.pumpWidget(_scope(home: const MainShell()));
 
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Market'), findsOneWidget);
+    expect(find.text('My Items'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
     expect(find.byTooltip('Sell or mint'), findsOneWidget);
 
@@ -67,12 +73,42 @@ void main() {
     expect(find.text('List NFT for ETH'), findsOneWidget);
     expect(find.text('Escrow sur mesure (blocks)'), findsOneWidget);
     expect(find.text('Quick Escrow form'), findsOneWidget);
-    expect(find.text('Escrow'), findsOneWidget);
-    expect(find.text('Rental'), findsOneWidget);
-    expect(find.text('Milestone'), findsOneWidget);
-    expect(find.text('Live'), findsOneWidget);
-    expect(find.text('Soon'), findsWidgets);
-    expect(find.text('Build'), findsOneWidget);
+  });
+
+  testWidgets('Listing detail buy shows ownership celebration in mock',
+      (tester) async {
+    _iphoneSurface(tester);
+    final wallet = MockWalletService();
+    final repo = MockContractRepository(txSender: wallet);
+    final market = MockMarketplaceRepository(txSender: wallet);
+    addTearDown(wallet.dispose);
+    await wallet.connect();
+    market.ensureConnectedHasSdt();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          walletServiceProvider.overrideWithValue(wallet),
+          chainTxSenderProvider.overrideWithValue(wallet),
+          contractRepositoryProvider.overrideWithValue(repo),
+          marketplaceRepositoryProvider.overrideWithValue(market),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: ListingDetailScreen(listingId: BigInt.one),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('ETH'), findsWidgets);
+    final buy = find.textContaining('Buy for');
+    expect(buy, findsOneWidget);
+    await tester.ensureVisible(buy);
+    await tester.tap(buy);
+    await tester.pumpAndSettle();
+
+    expect(find.text('You now own this'), findsOneWidget);
   });
 
   testWidgets('Create sheet mint opens mint screen', (tester) async {
@@ -98,7 +134,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mint demo NFT'), findsWidgets);
-    expect(find.textContaining('Metadata URI'), findsOneWidget);
+    expect(find.textContaining('Title or metadata URI'), findsOneWidget);
   });
 
   testWidgets('Create sheet Quick Escrow form still works', (tester) async {
