@@ -195,8 +195,8 @@ class _HomeHero extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Create opens Escrow sur mesure — seller, amount, deadline. '
-                'You sign; Sepolia enforces the rules.',
+                'Create opens Escrow sur mesure — snap plain-English blocks '
+                'or use the quick form. You sign; Sepolia enforces the rules.',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.75),
                   fontSize: 14,
@@ -305,7 +305,7 @@ class _EmptyContracts extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Tap Create or + for Escrow sur mesure (seller, amount, deadline).',
+          'Tap Create or + for Escrow sur mesure (blocks or quick form).',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppTheme.ink.withValues(alpha: 0.5),

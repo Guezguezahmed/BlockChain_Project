@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../screens/create_escrow_screen.dart';
+import '../screens/escrow_block_builder_screen.dart';
 import '../theme/app_theme.dart';
 import 'glass.dart';
 
-/// Springy glass create sheet: drag Escrow into Build, or tap for sur mesure form.
+/// Springy glass create sheet: quick Escrow form + Scratch block builder.
 Future<void> showCreateTemplateSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
@@ -33,6 +34,16 @@ void _openEscrowForm(BuildContext context) {
   Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => const CreateEscrowScreen(),
+    ),
+  );
+}
+
+void _openEscrowBlocks(BuildContext context) {
+  HapticFeedback.mediumImpact();
+  Navigator.of(context).pop();
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => const EscrowBlockBuilderScreen(),
     ),
   );
 }
@@ -147,7 +158,8 @@ class _CreateTemplateSheetBodyState extends State<_CreateTemplateSheetBody> {
     });
     Future<void>.delayed(const Duration(milliseconds: 160), () {
       if (!mounted) return;
-      _openEscrowForm(context);
+      // Drop on Build → Scratch block canvas (tap chip still opens quick form).
+      _openEscrowBlocks(context);
     });
   }
 
@@ -181,8 +193,8 @@ class _CreateTemplateSheetBodyState extends State<_CreateTemplateSheetBody> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Long-press Escrow → drop on Build, or tap. Then set seller, '
-            'amount, deadline (Escrow sur mesure).',
+            'Quick form, or build with plain-English blocks '
+            '(Escrow sur mesure).',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.ink.withValues(alpha: 0.62),
                   height: 1.3,
@@ -325,8 +337,8 @@ class _CreateTemplateSheetBodyState extends State<_CreateTemplateSheetBody> {
                                   const Spacer(),
                                   Text(
                                     active
-                                        ? 'Drop Escrow to customize'
-                                        : 'Drop Escrow here',
+                                        ? 'Drop Escrow to open blocks'
+                                        : 'Drop Escrow for block builder',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 15,
@@ -339,7 +351,7 @@ class _CreateTemplateSheetBodyState extends State<_CreateTemplateSheetBody> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Seller · amount · deadline',
+                                    'Snap plain-English blocks → deploy',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 13,
@@ -360,8 +372,28 @@ class _CreateTemplateSheetBodyState extends State<_CreateTemplateSheetBody> {
                                         borderRadius: BorderRadius.circular(14),
                                       ),
                                     ),
+                                    onPressed: () => _openEscrowBlocks(context),
+                                    child: const Text(
+                                      'Escrow sur mesure (blocks)',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppTheme.ink,
+                                      side: BorderSide(
+                                        color: AppTheme.ink
+                                            .withValues(alpha: 0.22),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
                                     onPressed: () => _openEscrowForm(context),
-                                    child: const Text('Escrow sur mesure'),
+                                    child: const Text('Quick Escrow form'),
                                   ),
                                 ],
                               ),

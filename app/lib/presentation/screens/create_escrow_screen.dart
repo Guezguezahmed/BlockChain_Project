@@ -11,7 +11,19 @@ import 'contract_detail_screen.dart';
 import 'wallet_screen.dart';
 
 class CreateEscrowScreen extends ConsumerStatefulWidget {
-  const CreateEscrowScreen({super.key});
+  const CreateEscrowScreen({
+    super.key,
+    this.initialSeller,
+    this.initialAmountEth,
+    this.initialDeadline,
+    this.fromBlockBuilder = false,
+  });
+
+  /// Prefill from the Scratch block builder (mapped factory params).
+  final String? initialSeller;
+  final String? initialAmountEth;
+  final DateTime? initialDeadline;
+  final bool fromBlockBuilder;
 
   @override
   ConsumerState<CreateEscrowScreen> createState() => _CreateEscrowScreenState();
@@ -19,12 +31,22 @@ class CreateEscrowScreen extends ConsumerStatefulWidget {
 
 class _CreateEscrowScreenState extends ConsumerState<CreateEscrowScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _sellerCtrl = TextEditingController();
-  final _amountCtrl = TextEditingController(text: '0.1');
-  DateTime _deadline = DateTime.now().toUtc().add(const Duration(days: 7));
+  late final TextEditingController _sellerCtrl;
+  late final TextEditingController _amountCtrl;
+  late DateTime _deadline;
   bool _busy = false;
   String? _error;
   String? _lastTx;
+
+  @override
+  void initState() {
+    super.initState();
+    _sellerCtrl = TextEditingController(text: widget.initialSeller ?? '');
+    _amountCtrl =
+        TextEditingController(text: widget.initialAmountEth ?? '0.1');
+    _deadline = widget.initialDeadline ??
+        DateTime.now().toUtc().add(const Duration(days: 7));
+  }
 
   @override
   void dispose() {
@@ -136,7 +158,9 @@ class _CreateEscrowScreenState extends ConsumerState<CreateEscrowScreen> {
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
             Text(
-              'Custom Escrow',
+              widget.fromBlockBuilder
+                  ? 'Review mapped Escrow'
+                  : 'Custom Escrow',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.4,
@@ -145,9 +169,13 @@ class _CreateEscrowScreenState extends ConsumerState<CreateEscrowScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Set seller, amount, and deadline. You (the connected wallet) '
-              'become the buyer. Funds move only when you Deposit on the '
-              'contract detail screen.',
+              widget.fromBlockBuilder
+                  ? 'Filled from your block stack (seller · amount · deadline). '
+                      'You (the connected wallet) become the buyer. Funds move '
+                      'only when you Deposit on the contract detail screen.'
+                  : 'Set seller, amount, and deadline. You (the connected wallet) '
+                      'become the buyer. Funds move only when you Deposit on the '
+                      'contract detail screen.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.ink.withValues(alpha: 0.65),
                     height: 1.4,

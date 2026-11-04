@@ -16,10 +16,11 @@ Bottom navigation keeps the existing teal/sand palette, with frosted (glass) chr
 
 1. Tap **Create a contract** (hero) or the center **+**.
 2. Sheet shows reorderable template chips (drag handle) + a **Build** drop zone.
-3. **Long-press Escrow** and drop it on Build, **tap Escrow**, or tap **Escrow sur mesure**.
-4. Form: seller address, amount (ETH), deadline → deploy (chain wiring unchanged).
+3. **Escrow sur mesure (blocks)** opens a Scratch-like canvas: drag plain-English blocks into a stack (seller / amount / deadline + optional story rules). Valid stack → **Deploy** prefills the existing create form (same `createEscrow` params — not a Solidity generator).
+4. **Quick Escrow form** or **tap Escrow** opens the classic form. Long-press Escrow → drop on Build also opens the block builder.
+5. Form: seller, amount (ETH), deadline → deploy (mock + chain unchanged).
 
-Rental / Milestone chips stay “Soon”. Contract detail and explorer links still push full-screen. Chain mode (`USE_MOCK=false`) is unchanged.
+Rental / Milestone are palette **Coming soon** stubs (not buildable). Chain mode (`USE_MOCK=false`) is unchanged.
 
 Screens talk only to `ContractRepository`. Implementations:
 
@@ -98,14 +99,16 @@ flutter devices                          # note the iPhone id
 flutter run -d <IPHONE_DEVICE_ID>       # mock mode by default
 ```
 
-Smoke-check on device:
+Smoke-check on iPhone:
 
-1. Home → **Create a contract** (or **+**) → glass sheet with Escrow chip + Build area.
-2. Long-press Escrow → drop on Build (or tap Escrow / **Escrow sur mesure**).
-3. Fill seller / amount / deadline → Deploy.
-4. Profile (wallet) → open an escrow detail (Etherscan + Blockscout links).
+1. Home → **Create a contract** (or **+**) → glass sheet.
+2. Tap **Escrow sur mesure (blocks)** (or long-press Escrow → drop on Build).
+3. Drag: start → Buyer is me → Seller → Lock ETH → Deadline (+ optional outcome story blocks).
+4. Tap editable blocks to fill seller / amount / days; **Deploy** when enabled → review form → deploy (mock OK).
+5. Confirm Rental / Milestone palette stubs show Coming soon and won’t snap.
+6. Also: **Quick Escrow form** still works; Profile → escrow detail links.
 
-Also try: drag sheet handle down to dismiss; reorder chips via the grip icon.
+Also try: dismiss sheet; reorder chips via the grip icon.
 
 If the icon won’t open: Settings → General → VPN & Device Management → trust the Apple Development cert; enable Developer Mode if prompted.
 
