@@ -26,16 +26,26 @@ ProviderScope _scope({required Widget home}) {
   );
 }
 
+void _iphoneSurface(WidgetTester tester) {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+}
+
 void main() {
   testWidgets('Home shows brand and create CTA', (tester) async {
+    _iphoneSurface(tester);
     await tester.pumpWidget(_scope(home: const HomeScreen()));
 
     expect(find.text('Contract Builder'), findsOneWidget);
     expect(find.text('Create a contract'), findsOneWidget);
     expect(find.text('My contracts'), findsOneWidget);
+    expect(find.textContaining('Escrow sur mesure'), findsOneWidget);
   });
 
   testWidgets('Main shell shows Home / Profile and create FAB', (tester) async {
+    _iphoneSurface(tester);
     await tester.pumpWidget(_scope(home: const MainShell()));
 
     expect(find.text('Home'), findsOneWidget);
@@ -45,20 +55,18 @@ void main() {
     await tester.tap(find.byTooltip('Create contract'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Choose a template'), findsOneWidget);
+    expect(find.text('Create a contract'), findsWidgets);
     expect(find.text('Escrow'), findsOneWidget);
     expect(find.text('Rental'), findsOneWidget);
     expect(find.text('Live'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Milestone payment'),
-      40,
-      scrollable: find.byType(Scrollable).last,
-    );
-    expect(find.text('Milestone payment'), findsOneWidget);
+    expect(find.text('Build'), findsOneWidget);
+    expect(find.text('Escrow sur mesure'), findsOneWidget);
+    expect(find.text('Milestone'), findsOneWidget);
     expect(find.text('Soon'), findsWidgets);
   });
 
-  testWidgets('Create template sheet opens Escrow form', (tester) async {
+  testWidgets('Create sheet tap Escrow opens sur mesure form', (tester) async {
+    _iphoneSurface(tester);
     await tester.pumpWidget(
       _scope(
         home: Builder(
@@ -79,7 +87,35 @@ void main() {
     await tester.tap(find.text('Escrow'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Create Escrow'), findsOneWidget);
+    expect(find.text('Escrow sur mesure'), findsOneWidget);
     expect(find.text('Seller address'), findsOneWidget);
+    expect(find.text('Custom Escrow'), findsOneWidget);
+  });
+
+  testWidgets('Create sheet Escrow sur mesure button opens form', (tester) async {
+    _iphoneSurface(tester);
+    await tester.pumpWidget(
+      _scope(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: FilledButton(
+                onPressed: () => showCreateTemplateSheet(context),
+                child: const Text('Open sheet'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open sheet'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Escrow sur mesure'));
+    await tester.tap(find.text('Escrow sur mesure'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Seller address'), findsOneWidget);
+    expect(find.textContaining('Amount'), findsOneWidget);
   });
 }

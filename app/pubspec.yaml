@@ -1,7 +1,7 @@
 name: blockchain_app
 description: No-code smart contract builder (Escrow MVP on Sepolia).
 publish_to: "none"
-version: 0.2.1+1
+version: 0.2.2+1
 
 environment:
   sdk: ^3.8.0

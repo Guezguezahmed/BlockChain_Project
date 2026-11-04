@@ -37,21 +37,27 @@ class HomeScreen extends ConsumerWidget {
                 SliverToBoxAdapter(child: _HomeHero(onOpenCreate: onOpenCreate)),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 8, 8),
                     child: Row(
                       children: [
-                        Text(
-                          'My contracts',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: AppTheme.ink,
-                                  ),
+                        Expanded(
+                          child: Text(
+                            'My contracts',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.ink,
+                                  letterSpacing: -0.2,
+                                ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        const Spacer(),
                         WalletStatusChip(onTap: onOpenProfile),
                         IconButton(
                           tooltip: 'Refresh',
+                          visualDensity: VisualDensity.compact,
                           onPressed: () =>
                               ref.invalidate(myContractsProvider),
                           icon: const Icon(Icons.refresh_rounded),
@@ -103,13 +109,15 @@ class HomeScreen extends ConsumerWidget {
                                     ? 'Seller'
                                     : '';
                             return Material(
-                              color: Colors.white.withValues(alpha: 0.72),
-                              borderRadius: BorderRadius.circular(14),
+                              color: Colors.white.withValues(alpha: 0.55),
+                              elevation: 0,
+                              shadowColor: Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
                               child: ListTile(
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(16),
                                   side: BorderSide(
-                                    color: AppTheme.ink.withValues(alpha: 0.08),
+                                    color: AppTheme.ink.withValues(alpha: 0.07),
                                   ),
                                 ),
                                 title: Text(
@@ -179,14 +187,16 @@ class _HomeHero extends StatelessWidget {
                 'No-code smart contracts',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 28,
-                  height: 1.1,
+                  fontSize: 30,
+                  height: 1.08,
                   fontWeight: FontWeight.w800,
+                  letterSpacing: -0.6,
                 ),
               ),
               const SizedBox(height: 10),
               Text(
-                'Tap + to pick a template. You sign; Sepolia enforces the rules.',
+                'Create opens Escrow sur mesure — seller, amount, deadline. '
+                'You sign; Sepolia enforces the rules.',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.75),
                   fontSize: 14,
@@ -196,13 +206,21 @@ class _HomeHero extends StatelessWidget {
               const SizedBox(height: 18),
               Row(
                 children: [
-                  FilledButton(
+                  FilledButton.icon(
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.accent,
                       foregroundColor: AppTheme.ink,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     onPressed: onOpenCreate,
-                    child: const Text('Create a contract'),
+                    icon: const Icon(Icons.add_rounded, size: 20),
+                    label: const Text('Create a contract'),
                   ),
                   const SizedBox(width: 12),
                   Flexible(
@@ -287,7 +305,7 @@ class _EmptyContracts extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Use the + button to deploy an Escrow.',
+          'Tap Create or + for Escrow sur mesure (seller, amount, deadline).',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppTheme.ink.withValues(alpha: 0.5),
@@ -296,7 +314,7 @@ class _EmptyContracts extends StatelessWidget {
         const SizedBox(height: 16),
         OutlinedButton(
           onPressed: onOpenCreate,
-          child: const Text('Create Escrow'),
+          child: const Text('Escrow sur mesure'),
         ),
       ],
     );
