@@ -7,7 +7,7 @@ import { ethers } from "hardhat";
  * Local:   npx hardhat run scripts/deployMarketplace.ts
  * Sepolia: npm run deploy:marketplace:sepolia
  *
- * Demo faucet: after deploy, the deployer holds the full 1_000_000 SDT supply.
+ * Demo faucet: after deploy, the deployer holds the full 10_000_000 SDT supply.
  * Transfer SDT to test wallets (fee 10 + stake 50 per listing, or 5+50 with
  * ≥100 SDT hold discount). There is no on-chain faucet contract — the deploy
  * mint is the faucet for the university demo.
@@ -27,7 +27,7 @@ async function main() {
     throw new Error("Refusing to deploy on Ethereum mainnet (Sepolia only).");
   }
 
-  const SDT_SUPPLY = ethers.parseEther("1000000");
+  const SDT_SUPPLY = ethers.parseEther("10000000");
   const LISTING_FEE = ethers.parseEther("10");
   const SELLER_STAKE = ethers.parseEther("50");
   const DISCOUNT_HOLD = ethers.parseEther("100");

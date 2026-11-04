@@ -10,7 +10,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 ///      inflate supply after deploy.
 contract SDT is ERC20 {
     /// @param initialHolder Receives the full fixed demo supply (typically the deployer).
-    /// @param initialSupply Fixed total supply in wei units (18 decimals), e.g. 1_000_000e18.
+    /// @param initialSupply Fixed total supply in wei units (18 decimals), e.g. 10_000_000e18.
     constructor(address initialHolder, uint256 initialSupply) ERC20("Smart Deal Token", "SDT") {
         require(initialHolder != address(0), "SDT: zero holder");
         require(initialSupply > 0, "SDT: zero supply");

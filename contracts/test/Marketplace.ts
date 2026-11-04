@@ -8,7 +8,7 @@ import {
 } from "../typechain-types";
 
 const ONE_ETH = ethers.parseEther("1");
-const SDT_SUPPLY = ethers.parseEther("1000000");
+const SDT_SUPPLY = ethers.parseEther("10000000");
 const LISTING_FEE = ethers.parseEther("10");
 const SELLER_STAKE = ethers.parseEther("50");
 const DISCOUNT_HOLD = ethers.parseEther("100");

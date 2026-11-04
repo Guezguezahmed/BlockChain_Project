@@ -13,7 +13,7 @@ Buyers pay listing price in **ETH**. Sellers pay **SDT** listing fee (burned) + 
 
 | Parameter | Demo default |
 |-----------|--------------|
-| SDT supply | 1_000_000 (minted once to deployer) |
+| SDT supply | 10_000_000 (minted once to deployer) |
 | Listing fee | 10 SDT (burned to `0x…dEaD`) |
 | Seller stake | 50 SDT (locked while listed; returned on buy or cancel) |
 | Fee discount | 50% if seller holds ≥100 SDT **or** already has stake locked |
@@ -80,7 +80,7 @@ npm run deploy:sepolia
 Verify on Etherscan (requires `ETHERSCAN_API_KEY`):
 
 ```bash
-npx hardhat verify --network sepolia <SDT_ADDRESS> <DEPLOYER> 1000000000000000000000000
+npx hardhat verify --network sepolia <SDT_ADDRESS> <DEPLOYER> 10000000000000000000000000
 npx hardhat verify --network sepolia <NFT_ADDRESS>
 npx hardhat verify --network sepolia <MARKET_ADDRESS> <SDT> <FEE> <STAKE> <HOLD> <BPS>
 ```
