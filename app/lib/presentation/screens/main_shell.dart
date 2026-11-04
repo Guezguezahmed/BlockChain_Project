@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
 import '../widgets/create_template_sheet.dart';
@@ -18,7 +21,8 @@ class _MainShellState extends State<MainShell> {
   double _fabScale = 1;
 
   Future<void> _openCreate() async {
-    setState(() => _fabScale = 0.9);
+    HapticFeedback.lightImpact();
+    setState(() => _fabScale = 0.88);
     await Future<void>.delayed(const Duration(milliseconds: 90));
     if (!mounted) return;
     setState(() => _fabScale = 1);
@@ -31,6 +35,8 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return Scaffold(
       extendBody: true,
       body: IndexedStack(
@@ -46,48 +52,58 @@ class _MainShellState extends State<MainShell> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: AnimatedScale(
         scale: _fabScale,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutBack,
         child: FloatingActionButton(
           onPressed: _openCreate,
           tooltip: 'Create contract',
-          elevation: 3,
+          elevation: 2,
+          highlightElevation: 4,
           backgroundColor: AppTheme.accent,
           foregroundColor: AppTheme.ink,
           child: const Icon(Icons.add_rounded, size: 30),
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFFF4FAF7),
-        elevation: 8,
-        shadowColor: AppTheme.ink.withValues(alpha: 0.12),
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        padding: EdgeInsets.zero,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: [
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.home_outlined,
-                  selectedIcon: Icons.home_rounded,
-                  label: 'Home',
-                  selected: _tab == 0,
-                  onTap: _goHome,
+      bottomNavigationBar: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+          child: BottomAppBar(
+            color: AppTheme.shellSurface.withValues(alpha: 0.72),
+            elevation: 0,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: const CircularNotchedRectangle(),
+            notchMargin: 8,
+            padding: EdgeInsets.zero,
+            child: SizedBox(
+              height: 64 + bottomInset,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomInset),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _NavItem(
+                        icon: Icons.home_outlined,
+                        selectedIcon: Icons.home_rounded,
+                        label: 'Home',
+                        selected: _tab == 0,
+                        onTap: _goHome,
+                      ),
+                    ),
+                    const SizedBox(width: 72),
+                    Expanded(
+                      child: _NavItem(
+                        icon: Icons.account_balance_wallet_outlined,
+                        selectedIcon: Icons.account_balance_wallet_rounded,
+                        label: 'Profile',
+                        selected: _tab == 1,
+                        onTap: _goProfile,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 72),
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.account_balance_wallet_outlined,
-                  selectedIcon: Icons.account_balance_wallet_rounded,
-                  label: 'Profile',
-                  selected: _tab == 1,
-                  onTap: _goProfile,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -113,9 +129,11 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color =
-        selected ? AppTheme.accentDim : AppTheme.ink.withValues(alpha: 0.45);
+        selected ? AppTheme.accentDim : AppTheme.ink.withValues(alpha: 0.42);
     return InkWell(
       onTap: onTap,
+      splashColor: AppTheme.accent.withValues(alpha: 0.12),
+      highlightColor: AppTheme.accent.withValues(alpha: 0.06),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -128,11 +146,12 @@ class _NavItem extends StatelessWidget {
               size: 24,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
+              letterSpacing: -0.1,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               color: color,
             ),

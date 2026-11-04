@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/escrow_contract.dart';
 import '../../domain/utils/eth_formatting.dart';
 import '../providers/app_providers.dart';
+import '../theme/app_theme.dart';
 import 'contract_detail_screen.dart';
 import 'wallet_screen.dart';
 
@@ -115,18 +118,42 @@ class _CreateEscrowScreenState extends ConsumerState<CreateEscrowScreen> {
     final connected = ref.watch(connectedAddressProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Escrow')),
+      extendBodyBehindAppBar: false,
+      appBar: AppBar(
+        title: const Text('Escrow sur mesure'),
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: Container(
+              color: AppTheme.shellSurface.withValues(alpha: 0.72),
+            ),
+          ),
+        ),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
             Text(
-              'You (the connected wallet) become the buyer. Money is not moved '
-              'until you tap Deposit on the contract detail screen.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              'Custom Escrow',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                    color: AppTheme.ink,
+                  ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 6),
+            Text(
+              'Set seller, amount, and deadline. You (the connected wallet) '
+              'become the buyer. Funds move only when you Deposit on the '
+              'contract detail screen.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.ink.withValues(alpha: 0.65),
+                    height: 1.4,
+                  ),
+            ),
+            const SizedBox(height: 22),
             TextFormField(
               controller: _sellerCtrl,
               decoration: const InputDecoration(

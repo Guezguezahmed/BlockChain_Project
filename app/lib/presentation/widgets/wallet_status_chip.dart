@@ -25,7 +25,7 @@ class WalletStatusChip extends ConsumerWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: AppTheme.ink.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
@@ -35,21 +35,30 @@ class WalletStatusChip extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              session == null ? Icons.account_balance_wallet_outlined : Icons.circle,
-              size: session == null ? 16 : 10,
+              session == null
+                  ? Icons.account_balance_wallet_outlined
+                  : Icons.circle,
+              size: session == null ? 15 : 9,
               color: session == null
                   ? AppTheme.ink
                   : session.isSepolia
                       ? AppTheme.accent
                       : Colors.orange.shade800,
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  letterSpacing: -0.1,
+                ),
+              ),
             ),
             if (session != null) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               Text(
                 AppConfig.networkName,
                 style: TextStyle(

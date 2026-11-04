@@ -4,15 +4,22 @@ Clean-architecture client for the Escrow preset on **Ethereum Sepolia**.
 
 ## App shell (UI)
 
-Bottom navigation keeps the existing teal/sand palette:
+Bottom navigation keeps the existing teal/sand palette, with frosted (glass) chrome:
 
 | Control | Role |
 |---|---|
-| **Home** | Compact brand hero + My contracts overview |
-| **+ FAB** (center) | Opens a half-screen template sheet (Escrow live; Rental / Milestone “Soon”) |
+| **Home** | Brand hero + **Create a contract** CTA + My contracts |
+| **+ FAB** (center) | Opens a springy glass create sheet |
 | **Profile** | Wallet connect / disconnect (Reown or mock) |
 
-Create Escrow, contract detail, and explorer links still push as full screens on top of the shell. Chain mode (`USE_MOCK=false`) is unchanged.
+### Create flow (Escrow sur mesure)
+
+1. Tap **Create a contract** (hero) or the center **+**.
+2. Sheet shows reorderable template chips (drag handle) + a **Build** drop zone.
+3. **Long-press Escrow** and drop it on Build, **tap Escrow**, or tap **Escrow sur mesure**.
+4. Form: seller address, amount (ETH), deadline → deploy (chain wiring unchanged).
+
+Rental / Milestone chips stay “Soon”. Contract detail and explorer links still push full-screen. Chain mode (`USE_MOCK=false`) is unchanged.
 
 Screens talk only to `ContractRepository`. Implementations:
 
@@ -91,7 +98,14 @@ flutter devices                          # note the iPhone id
 flutter run -d <IPHONE_DEVICE_ID>       # mock mode by default
 ```
 
-Smoke-check on device: Home list → tap **+** → Escrow → create form → Profile (wallet) → open an escrow detail (Etherscan + Blockscout links).
+Smoke-check on device:
+
+1. Home → **Create a contract** (or **+**) → glass sheet with Escrow chip + Build area.
+2. Long-press Escrow → drop on Build (or tap Escrow / **Escrow sur mesure**).
+3. Fill seller / amount / deadline → Deploy.
+4. Profile (wallet) → open an escrow detail (Etherscan + Blockscout links).
+
+Also try: drag sheet handle down to dismiss; reorder chips via the grip icon.
 
 If the icon won’t open: Settings → General → VPN & Device Management → trust the Apple Development cert; enable Developer Mode if prompted.
 
