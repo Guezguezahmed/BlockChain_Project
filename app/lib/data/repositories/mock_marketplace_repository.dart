@@ -21,6 +21,8 @@ class MockMarketplaceRepository implements MarketplaceRepository {
   final Map<BigInt, String> _uris = {};
   final Map<String, BigInt> _sdtBalances = {};
   final Map<String, BigInt> _sdtAllowance = {};
+  /// Token ids approved for marketplace transfer (getApproved stand-in).
+  final Set<BigInt> _nftApprovals = {};
 
   BigInt _nextListingId = BigInt.one;
   BigInt _nextTokenId = BigInt.from(3);
@@ -200,11 +202,17 @@ class MockMarketplaceRepository implements MarketplaceRepository {
     if (owner.toLowerCase() != from.toLowerCase()) {
       throw StateError('Only the NFT owner can approve');
     }
+    _nftApprovals.add(tokenId);
     final hash = await _txSender.sendTransaction(
       to: demoNft,
       dataHex: '0xapproveNft',
     );
     return TransactionResult(txHash: hash, status: TxStatus.confirmed);
+  }
+
+  @override
+  Future<bool> isNftApprovedForMarketplace(BigInt tokenId) async {
+    return _nftApprovals.contains(tokenId);
   }
 
   @override

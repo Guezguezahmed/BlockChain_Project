@@ -33,6 +33,9 @@ abstract class MarketplaceRepository {
   /// Approve Marketplace for a specific NFT token id.
   Future<TransactionResult> approveNft(BigInt tokenId);
 
+  /// True if Marketplace can transfer [tokenId] (getApproved / operator).
+  Future<bool> isNftApprovedForMarketplace(BigInt tokenId);
+
   /// List after SDT + NFT approvals.
   Future<TransactionResult> listItem(ListNftParams params);
 

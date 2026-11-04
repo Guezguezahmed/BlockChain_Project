@@ -1,7 +1,7 @@
 name: blockchain_app
 description: Smart Deal — peer NFT marketplace on Sepolia (SDT fees, ETH buys).
 publish_to: "none"
-version: 0.5.1+1
+version: 0.5.2+1
 
 environment:
   sdk: ^3.8.0
@@ -18,6 +18,8 @@ dependencies:
   # WalletConnect / MetaMask (Reown AppKit). Needed for chain mode.
   reown_appkit: ^1.9.0
   convert: ^3.1.2
+  # Persist in-progress sell flow across MetaMask app-switches / process kills.
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:

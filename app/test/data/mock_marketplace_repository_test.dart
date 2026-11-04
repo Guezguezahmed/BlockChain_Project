@@ -46,8 +46,10 @@ void main() {
     final tokenId = owned.last;
 
     final info = await repo.getSdtInfo(wallet.mockAddress);
+    expect(await repo.isNftApprovedForMarketplace(tokenId), isFalse);
     await repo.approveSdt(info.requiredForList);
     await repo.approveNft(tokenId);
+    expect(await repo.isNftApprovedForMarketplace(tokenId), isTrue);
 
     final listed = await repo.listItem(
       ListNftParams(

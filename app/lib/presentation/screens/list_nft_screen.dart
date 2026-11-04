@@ -7,12 +7,16 @@ import '../../domain/models/transaction_result.dart';
 import '../../domain/utils/eth_formatting.dart';
 import '../../domain/utils/nft_metadata.dart';
 import '../providers/app_providers.dart';
+import '../providers/sell_flow_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nft_art.dart';
 import '../widgets/sdt_faucet_note.dart';
 import '../widgets/tx_status_banner.dart';
 
 /// Approve SDT + NFT, then list on Marketplace for ETH.
+///
+/// Survives MetaMask app-switches: progress is persisted locally and
+/// re-synced from chain (allowance / NFT approval) when the app resumes.
 class ListNftScreen extends ConsumerStatefulWidget {
   const ListNftScreen({super.key, this.initialTokenId});
 
@@ -22,10 +26,12 @@ class ListNftScreen extends ConsumerStatefulWidget {
   ConsumerState<ListNftScreen> createState() => _ListNftScreenState();
 }
 
-class _ListNftScreenState extends ConsumerState<ListNftScreen> {
-  final _price = TextEditingController(text: '0.05');
+class _ListNftScreenState extends ConsumerState<ListNftScreen>
+    with WidgetsBindingObserver {
+  late final TextEditingController _price;
   BigInt? _selectedToken;
   bool _busy = false;
+  bool _syncing = false;
   String? _status;
   TxBannerKind _kind = TxBannerKind.info;
   String? _tx;
@@ -34,13 +40,117 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedToken = widget.initialTokenId;
+    WidgetsBinding.instance.addObserver(this);
+    final snap = ref.read(sellFlowProvider);
+    _selectedToken = widget.initialTokenId ?? snap.tokenId;
+    _price = TextEditingController(text: snap.priceEth);
+    _stepDone = snap.stepDone.clamp(0, 2);
+    // ignore: discarded_futures
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    final snap = ref.read(sellFlowProvider);
+    if (snap.canResume) {
+      // Restore token/price/step from the interrupted MetaMask session.
+      if (_selectedToken == null && snap.tokenId != null) {
+        setState(() => _selectedToken = snap.tokenId);
+      }
+      if (_price.text != snap.priceEth) {
+        _price.text = snap.priceEth;
+      }
+      setState(() => _stepDone = snap.stepDone.clamp(0, 2));
+    }
+    await _syncFromChain(reason: 'Opened list flow');
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _price.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // MetaMask returns here — re-read on-chain approvals.
+      // ignore: discarded_futures
+      _syncFromChain(reason: 'Back from wallet');
+    }
+  }
+
+  Future<void> _persistDraft() async {
+    final ctrl = ref.read(sellFlowProvider.notifier);
+    await ctrl.begin(
+      tokenId: _selectedToken,
+      priceEth: _price.text,
+      stepDone: _stepDone.clamp(0, 2),
+    );
+  }
+
+  /// Source of truth is the chain — local stepDone is a cache.
+  Future<void> _syncFromChain({String? reason}) async {
+    if (!mounted || _busy) return;
+    setState(() => _syncing = true);
+    try {
+      ref.invalidate(sdtInfoProvider);
+      final info = await ref.read(sdtInfoProvider.future);
+      var chainStep = 0;
+      if (info != null && info.hasEnoughAllowance) {
+        chainStep = 1;
+      }
+
+      final token = _selectedToken;
+      if (token != null && chainStep >= 1) {
+        try {
+          final approved = await ref
+              .read(marketplaceRepositoryProvider)
+              .isNftApprovedForMarketplace(token);
+          if (approved) chainStep = 2;
+        } catch (_) {
+          // Keep SDT step if NFT check fails (RPC blip).
+        }
+      }
+
+      if (!mounted) return;
+      // Prefer the further-along of cache vs chain (RPC can lag right after tx).
+      final next = chainStep > _stepDone ? chainStep : _stepDone;
+      final advanced = next > _stepDone;
+      setState(() {
+        _stepDone = next;
+        if (advanced) {
+          _status = reason == null
+              ? 'Synced: step $_stepDone of 3 ready'
+              : '$reason — step $_stepDone of 3 ready';
+          _kind = TxBannerKind.success;
+        } else if (reason == 'Back from wallet') {
+          _status =
+              'Wallet returned. Approvals on-chain: step $_stepDone of 3.';
+          _kind = TxBannerKind.info;
+        }
+      });
+
+      // Activate resume banner only once we have real progress.
+      if (_stepDone > 0 || ref.read(sellFlowProvider).canResume) {
+        await ref.read(sellFlowProvider.notifier).begin(
+              tokenId: _selectedToken,
+              priceEth: _price.text,
+              stepDone: _stepDone,
+            );
+      } else if (_selectedToken != null) {
+        await ref.read(sellFlowProvider.notifier).setToken(_selectedToken);
+        await ref.read(sellFlowProvider.notifier).setPrice(_price.text);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _status = 'Could not sync approvals: $e';
+        _kind = TxBannerKind.error;
+      });
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
   }
 
   Future<void> _approveSdt() async {
@@ -60,9 +170,21 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
       });
       return;
     }
+    if (info.hasEnoughAllowance) {
+      setState(() {
+        _stepDone = _stepDone < 1 ? 1 : _stepDone;
+        _status = 'SDT already approved on-chain — continue to NFT approve';
+        _kind = TxBannerKind.success;
+      });
+      await ref.read(sellFlowProvider.notifier).setStepDone(_stepDone);
+      return;
+    }
+
+    await _persistDraft();
     setState(() {
       _busy = true;
-      _status = 'Approve SDT in wallet…';
+      _status =
+          'Approve SDT in MetaMask… You can switch apps; progress is saved.';
       _kind = TxBannerKind.pending;
     });
     try {
@@ -70,21 +192,31 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
           .read(marketplaceRepositoryProvider)
           .approveSdt(info.requiredForList);
       _tx = result.txHash;
-      setState(() {
-        _stepDone = 1;
-        _status = result.status == TxStatus.failed
-            ? 'SDT approve failed'
-            : 'SDT approved for fee + stake';
-        _kind = result.status == TxStatus.failed
-            ? TxBannerKind.error
-            : TxBannerKind.success;
-      });
+      if (result.status == TxStatus.failed) {
+        setState(() {
+          _status = 'SDT approve failed';
+          _kind = TxBannerKind.error;
+        });
+      } else {
+        setState(() {
+          _stepDone = 1;
+          _status = result.status == TxStatus.pending
+              ? 'SDT approve submitted — waiting for confirmation'
+              : 'SDT approved for fee + stake';
+          _kind = result.status == TxStatus.pending
+              ? TxBannerKind.pending
+              : TxBannerKind.success;
+        });
+        await ref.read(sellFlowProvider.notifier).setStepDone(1);
+      }
       ref.invalidate(sdtInfoProvider);
     } catch (e) {
       setState(() {
         _status = e.toString();
         _kind = TxBannerKind.error;
       });
+      // Still sync — user may have confirmed in MetaMask while we timed out.
+      await _syncFromChain(reason: 'Checking if approve landed');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -99,29 +231,56 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
       });
       return;
     }
+
+    try {
+      final already = await ref
+          .read(marketplaceRepositoryProvider)
+          .isNftApprovedForMarketplace(token);
+      if (already) {
+        setState(() {
+          _stepDone = _stepDone < 2 ? 2 : _stepDone;
+          _status = 'NFT already approved — you can list for ETH';
+          _kind = TxBannerKind.success;
+        });
+        await ref.read(sellFlowProvider.notifier).setStepDone(_stepDone);
+        return;
+      }
+    } catch (_) {}
+
+    await _persistDraft();
     setState(() {
       _busy = true;
-      _status = 'Approve NFT in wallet…';
+      _status =
+          'Approve NFT in MetaMask… Progress is saved if the app switches.';
       _kind = TxBannerKind.pending;
     });
     try {
       final result =
           await ref.read(marketplaceRepositoryProvider).approveNft(token);
       _tx = result.txHash;
-      setState(() {
-        _stepDone = 2;
-        _status = result.status == TxStatus.failed
-            ? 'NFT approve failed'
-            : 'NFT approved — marketplace can custody it';
-        _kind = result.status == TxStatus.failed
-            ? TxBannerKind.error
-            : TxBannerKind.success;
-      });
+      if (result.status == TxStatus.failed) {
+        setState(() {
+          _status = 'NFT approve failed';
+          _kind = TxBannerKind.error;
+        });
+      } else {
+        setState(() {
+          _stepDone = 2;
+          _status = result.status == TxStatus.pending
+              ? 'NFT approve submitted — waiting for confirmation'
+              : 'NFT approved — marketplace can custody it';
+          _kind = result.status == TxStatus.pending
+              ? TxBannerKind.pending
+              : TxBannerKind.success;
+        });
+        await ref.read(sellFlowProvider.notifier).setStepDone(2);
+      }
     } catch (e) {
       setState(() {
         _status = e.toString();
         _kind = TxBannerKind.error;
       });
+      await _syncFromChain(reason: 'Checking if NFT approve landed');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -145,9 +304,10 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
       return;
     }
 
+    await _persistDraft();
     setState(() {
       _busy = true;
-      _status = 'Confirm list in wallet…';
+      _status = 'Confirm list in MetaMask…';
       _kind = TxBannerKind.pending;
     });
     try {
@@ -159,15 +319,23 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
             ),
           );
       _tx = result.txHash;
-      setState(() {
-        _stepDone = 3;
-        _status = result.status == TxStatus.failed
-            ? 'List failed'
-            : 'Listed! Pull to refresh Market to see your card.';
-        _kind = result.status == TxStatus.failed
-            ? TxBannerKind.error
-            : TxBannerKind.success;
-      });
+      if (result.status == TxStatus.failed) {
+        setState(() {
+          _status = 'List failed';
+          _kind = TxBannerKind.error;
+        });
+      } else {
+        setState(() {
+          _stepDone = 3;
+          _status = result.status == TxStatus.pending
+              ? 'List submitted — pull to refresh Market when confirmed'
+              : 'Listed! Pull to refresh Market to see your card.';
+          _kind = result.status == TxStatus.pending
+              ? TxBannerKind.pending
+              : TxBannerKind.success;
+        });
+        await ref.read(sellFlowProvider.notifier).setStepDone(3);
+      }
       ref.invalidate(marketplaceListingsProvider);
       ref.invalidate(ownedNftsProvider);
       ref.invalidate(myListingsProvider);
@@ -182,13 +350,44 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
     }
   }
 
+  void _onTokenPicked(BigInt id) {
+    setState(() {
+      _selectedToken = id;
+      // Changing NFT may invalidate NFT-approval step.
+      if (_stepDone >= 2) _stepDone = 1;
+    });
+    // ignore: discarded_futures
+    () async {
+      await ref.read(sellFlowProvider.notifier).setToken(id);
+      await ref.read(sellFlowProvider.notifier).setStepDone(_stepDone);
+      await _syncFromChain();
+    }();
+  }
+
   @override
   Widget build(BuildContext context) {
     final owned = ref.watch(ownedNftsProvider);
     final sdt = ref.watch(sdtInfoProvider);
+    final flow = ref.watch(sellFlowProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('List NFT')),
+      appBar: AppBar(
+        title: const Text('List NFT'),
+        actions: [
+          if (_syncing || flow.canResume)
+            IconButton(
+              tooltip: 'Sync approvals from chain',
+              onPressed: _busy ? null : () => _syncFromChain(reason: 'Manual sync'),
+              icon: _syncing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sync_rounded),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
@@ -197,6 +396,15 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
             'Fee is burned; stake unlocks on sale or cancel.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.ink.withValues(alpha: 0.7),
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Switching to MetaMask is fine — this screen saves your progress, '
+            'and approvals live on-chain even if the app restarts.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.ink.withValues(alpha: 0.55),
+                  height: 1.35,
                 ),
           ),
           const SizedBox(height: 12),
@@ -246,9 +454,7 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
                     _TokenPick(
                       tokenId: id,
                       selected: _selectedToken == id,
-                      onTap: _busy
-                          ? null
-                          : () => setState(() => _selectedToken = id),
+                      onTap: _busy ? null : () => _onTokenPicked(id),
                     ),
                 ],
               );
@@ -258,6 +464,10 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
           TextField(
             controller: _price,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (v) {
+              // ignore: discarded_futures
+              ref.read(sellFlowProvider.notifier).setPrice(v);
+            },
             decoration: const InputDecoration(
               labelText: 'Price (ETH)',
               hintText: '0.05',
@@ -266,14 +476,16 @@ class _ListNftScreenState extends ConsumerState<ListNftScreen> {
           const SizedBox(height: 18),
           _StepButton(
             step: 1,
-            label: 'Approve SDT (fee + stake)',
+            label: _stepDone >= 1
+                ? 'SDT approved'
+                : 'Approve SDT (fee + stake)',
             done: _stepDone >= 1,
             onPressed: _busy ? null : _approveSdt,
           ),
           const SizedBox(height: 8),
           _StepButton(
             step: 2,
-            label: 'Approve NFT',
+            label: _stepDone >= 2 ? 'NFT approved' : 'Approve NFT',
             done: _stepDone >= 2,
             onPressed: _busy ? null : _approveNft,
           ),
@@ -329,6 +541,17 @@ class _FeeStakePanel extends StatelessWidget {
                     : Colors.red.shade700,
               ),
             ),
+            if (info.hasEnoughAllowance) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Marketplace allowance OK',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.accentDim,
+                ),
+              ),
+            ],
           ],
         ),
       ),

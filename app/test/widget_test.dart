@@ -11,6 +11,7 @@ import 'package:blockchain_app/presentation/widgets/create_template_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 ProviderScope _scope({required Widget home}) {
   final wallet = MockWalletService();
@@ -73,6 +74,25 @@ void main() {
     expect(find.text('List NFT for ETH'), findsOneWidget);
     expect(find.text('Escrow sur mesure (blocks)'), findsOneWidget);
     expect(find.text('Quick Escrow form'), findsOneWidget);
+  });
+
+  testWidgets('Main shell shows Continue listing resume banner', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'sell_flow_active': true,
+      'sell_flow_token': '5',
+      'sell_flow_price': '0.05',
+      'sell_flow_step': 1,
+    });
+    _iphoneSurface(tester);
+    await tester.pumpWidget(_scope(home: const MainShell()));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Continue listing'), findsOneWidget);
+    expect(find.text('Resume'), findsOneWidget);
+
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+    expect(find.text('List NFT'), findsOneWidget);
   });
 
   testWidgets('Listing detail buy shows ownership celebration in mock',

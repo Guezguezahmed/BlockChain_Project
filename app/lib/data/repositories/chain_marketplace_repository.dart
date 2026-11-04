@@ -309,6 +309,27 @@ class ChainMarketplaceRepository implements MarketplaceRepository {
   }
 
   @override
+  Future<bool> isNftApprovedForMarketplace(BigInt tokenId) async {
+    final market = EthereumAddress.fromHex(marketplaceAddress);
+    final approved = (await _client.call(
+      contract: _nft,
+      function: _nft.function('getApproved'),
+      params: [tokenId],
+    ))
+        .first as EthereumAddress;
+    if (approved == market) return true;
+
+    final ownerHex = await ownerOf(tokenId);
+    final isOperator = (await _client.call(
+      contract: _nft,
+      function: _nft.function('isApprovedForAll'),
+      params: [EthereumAddress.fromHex(ownerHex), market],
+    ))
+        .first as bool;
+    return isOperator;
+  }
+
+  @override
   Future<TransactionResult> listItem(ListNftParams params) async {
     // ignore: unnecessary_statements
     _from;
