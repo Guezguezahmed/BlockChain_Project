@@ -15,6 +15,8 @@ const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.24",
     settings: {
+      // OZ 5.6+ uses Cancun opcodes (e.g. mcopy) in Bytes.sol.
+      evmVersion: "cancun",
       optimizer: {
         enabled: true,
         runs: 200,

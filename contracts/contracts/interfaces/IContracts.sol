@@ -101,3 +101,67 @@ interface IEscrow {
  * KNOWN LIMITATION: after the deadline the buyer can always reclaim,
  * so the seller carries some risk (mention in the write-up).
  */
+
+/*//////////////////////////////////////////////////////////////
+                     SMART DEAL NFT MARKETPLACE
+//////////////////////////////////////////////////////////////*/
+
+/// @notice Primary MVP path: digital NFT sales with ETH payment + SDT fee/stake.
+/// @dev Listings live in one Marketplace contract. On list, NFT is custodied here.
+///      Buy transfers NFT to buyer and ETH to seller; cancel returns NFT + stake.
+interface IMarketplace {
+    struct Listing {
+        address seller;
+        address nft;
+        uint256 tokenId;
+        uint256 priceWei;
+        uint256 stakeLocked;
+        uint256 feePaid;
+        bool active;
+    }
+
+    event ItemListed(
+        uint256 indexed listingId,
+        address indexed seller,
+        address indexed nft,
+        uint256 tokenId,
+        uint256 priceWei,
+        uint256 feePaid,
+        uint256 stakeLocked,
+        uint256 timestamp
+    );
+
+    event ItemSold(
+        uint256 indexed listingId,
+        address indexed buyer,
+        address indexed seller,
+        uint256 priceWei,
+        uint256 stakeReturned,
+        uint256 timestamp
+    );
+
+    event ListingCancelled(
+        uint256 indexed listingId,
+        address indexed seller,
+        uint256 stakeReturned,
+        uint256 timestamp
+    );
+
+    /// Seller lists an NFT they own. Pulls SDT listing fee (burned) + stake (locked).
+    /// NFT is transferred into the marketplace until buy or cancel.
+    function listItem(
+        address nft,
+        uint256 tokenId,
+        uint256 priceWei
+    ) external returns (uint256 listingId);
+
+    /// Buyer pays exact `priceWei` ETH. NFT goes to buyer; ETH to seller; stake unlocked.
+    function buyItem(uint256 listingId) external payable;
+
+    /// Seller cancels an active listing. NFT + stake returned. Fee stays burned.
+    function cancelListing(uint256 listingId) external;
+
+    function getListing(uint256 listingId) external view returns (Listing memory);
+    function nextListingId() external view returns (uint256);
+    function quoteListingFee(address seller) external view returns (uint256);
+}
