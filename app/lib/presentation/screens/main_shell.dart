@@ -56,7 +56,7 @@ class _MainShellState extends State<MainShell> {
         curve: Curves.easeOutBack,
         child: FloatingActionButton(
           onPressed: _openCreate,
-          tooltip: 'Create contract',
+          tooltip: 'Sell or mint',
           elevation: 2,
           highlightElevation: 4,
           backgroundColor: AppTheme.accent,

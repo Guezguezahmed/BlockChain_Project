@@ -15,8 +15,8 @@ class PublicNoticeBanner extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Contracts on Sepolia are public and verifiable. No one owns '
-                'or can pause them — including this app.',
+                'Smart Deal on Sepolia is public and verifiable. Listings and '
+                'NFTs have no admin pause — including this app.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: const Color(0xFFE7F2EE),
                       height: 1.3,

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../config/app_config.dart';
 import '../../data/wallet/reown_wallet_service.dart';
 import '../providers/app_providers.dart';
+import '../widgets/sdt_faucet_note.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key, this.embedded = false});
@@ -81,6 +82,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
             'Private keys never leave your wallet.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
+          const SizedBox(height: 12),
+          const SdtFaucetNote(),
           const SizedBox(height: 16),
           if (AppConfig.useMock)
             const ListTile(

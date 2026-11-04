@@ -7,9 +7,9 @@ import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/public_notice_banner.dart';
 import '../widgets/wallet_status_chip.dart';
-import 'contract_detail_screen.dart';
+import 'listing_detail_screen.dart';
 
-/// Home tab: compact brand header + contracts overview.
+/// Home tab: Smart Deal marketplace listings (primary product surface).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({
     super.key,
@@ -22,9 +22,8 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final address = ref.watch(connectedAddressProvider);
-    final async = ref.watch(myContractsProvider);
-    // Extra bottom padding so list content clears the notched bar + FAB.
+    final async = ref.watch(marketplaceListingsProvider);
+    final sdt = ref.watch(sdtInfoProvider).asData?.value;
     final bottomInset = MediaQuery.paddingOf(context).bottom + 88;
 
     return Scaffold(
@@ -34,7 +33,14 @@ class HomeScreen extends ConsumerWidget {
           Expanded(
             child: CustomScrollView(
               slivers: [
-                SliverToBoxAdapter(child: _HomeHero(onOpenCreate: onOpenCreate)),
+                SliverToBoxAdapter(
+                  child: _HomeHero(
+                    onOpenCreate: onOpenCreate,
+                    sdtBalanceLabel: sdt == null
+                        ? null
+                        : '${formatWeiAsEth(sdt.balance, fractionDigits: 2)} SDT',
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 8, 8),
@@ -42,7 +48,7 @@ class HomeScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            'My contracts',
+                            'Marketplace',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -58,95 +64,96 @@ class HomeScreen extends ConsumerWidget {
                         IconButton(
                           tooltip: 'Refresh',
                           visualDensity: VisualDensity.compact,
-                          onPressed: () =>
-                              ref.invalidate(myContractsProvider),
+                          onPressed: () {
+                            ref.invalidate(marketplaceListingsProvider);
+                            ref.invalidate(sdtInfoProvider);
+                          },
                           icon: const Icon(Icons.refresh_rounded),
                         ),
                       ],
                     ),
                   ),
                 ),
-                if (address == null)
-                  SliverFillRemaining(
+                async.when(
+                  loading: () => const SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(24, 8, 24, bottomInset),
-                      child: _EmptyConnect(onOpenProfile: onOpenProfile),
-                    ),
-                  )
-                else
-                  async.when(
-                    loading: () => const SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                    error: (e, _) => SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: Text('$e')),
-                    ),
-                    data: (items) {
-                      if (items.isEmpty) {
-                        return SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Padding(
-                            padding:
-                                EdgeInsets.fromLTRB(24, 8, 24, bottomInset),
-                            child: _EmptyContracts(onOpenCreate: onOpenCreate),
-                          ),
-                        );
-                      }
-                      return SliverPadding(
-                        padding: EdgeInsets.fromLTRB(16, 0, 16, bottomInset),
-                        sliver: SliverList.separated(
-                          itemCount: items.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (context, i) {
-                            final c = items[i];
-                            final role = c.isBuyerOf(address)
-                                ? 'Buyer'
-                                : c.isSellerOf(address)
-                                    ? 'Seller'
-                                    : '';
-                            return Material(
-                              color: Colors.white.withValues(alpha: 0.55),
-                              elevation: 0,
-                              shadowColor: Colors.transparent,
-                              borderRadius: BorderRadius.circular(16),
-                              child: ListTile(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(
-                                    color: AppTheme.ink.withValues(alpha: 0.07),
-                                  ),
-                                ),
-                                title: Text(
-                                  '${c.templateType.label} · ${c.state.label}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  '${formatWeiAsEth(c.amountWei)} ETH · $role\n'
-                                  '${c.address}',
-                                ),
-                                isThreeLine: true,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => ContractDetailScreen(
-                                        address: c.address,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (e, _) => SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: Text('$e')),
+                  ),
+                  data: (items) {
+                    if (items.isEmpty) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Padding(
+                          padding:
+                              EdgeInsets.fromLTRB(24, 8, 24, bottomInset),
+                          child: _EmptyListings(onOpenCreate: onOpenCreate),
                         ),
                       );
-                    },
-                  ),
+                    }
+                    return SliverPadding(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomInset),
+                      sliver: SliverList.separated(
+                        itemCount: items.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: 10),
+                        itemBuilder: (context, i) {
+                          final l = items[i];
+                          return Material(
+                            color: Colors.white.withValues(alpha: 0.55),
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                            borderRadius: BorderRadius.circular(16),
+                            child: ListTile(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: AppTheme.ink.withValues(alpha: 0.07),
+                                ),
+                              ),
+                              leading: CircleAvatar(
+                                backgroundColor:
+                                    AppTheme.accent.withValues(alpha: 0.25),
+                                foregroundColor: AppTheme.ink,
+                                child: Text(
+                                  '#${l.tokenId}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                'Listing #${l.id} · NFT #${l.tokenId}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${formatWeiAsEth(l.priceWei)} ETH · '
+                                'seller ${l.shortSeller}\n'
+                                '${l.tokenUri ?? l.shortNft}',
+                              ),
+                              isThreeLine: true,
+                              trailing: const Icon(Icons.chevron_right_rounded),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        ListingDetailScreen(listingId: l.id),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -157,9 +164,10 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _HomeHero extends StatelessWidget {
-  const _HomeHero({this.onOpenCreate});
+  const _HomeHero({this.onOpenCreate, this.sdtBalanceLabel});
 
   final VoidCallback? onOpenCreate;
+  final String? sdtBalanceLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +182,7 @@ class _HomeHero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Contract Builder',
+                'Smart Deal',
                 style: TextStyle(
                   color: Color(0xFFE7F2EE),
                   fontSize: 15,
@@ -184,7 +192,7 @@ class _HomeHero extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               const Text(
-                'No-code smart contracts',
+                'Peer NFT marketplace',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 30,
@@ -195,8 +203,8 @@ class _HomeHero extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Create opens Escrow sur mesure — snap plain-English blocks '
-                'or use the quick form. You sign; Sepolia enforces the rules.',
+                'List digital goods with an SDT fee + stake. Buyers pay ETH. '
+                'Ownership moves on-chain — no middleman custody.',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.75),
                   fontSize: 14,
@@ -219,17 +227,18 @@ class _HomeHero extends StatelessWidget {
                       ),
                     ),
                     onPressed: onOpenCreate,
-                    icon: const Icon(Icons.add_rounded, size: 20),
-                    label: const Text('Create a contract'),
+                    icon: const Icon(Icons.storefront_rounded, size: 20),
+                    label: const Text('Sell or mint'),
                   ),
                   const SizedBox(width: 12),
                   Flexible(
                     child: Text(
-                      AppConfig.useMock
-                          ? 'Mock mode'
-                          : AppConfig.hasFactoryAddress
-                              ? 'Sepolia · live'
-                              : 'Sepolia · factory missing',
+                      [
+                        if (sdtBalanceLabel != null) sdtBalanceLabel!,
+                        AppConfig.useMock
+                            ? 'Mock mode'
+                            : 'Sepolia · live',
+                      ].join(' · '),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.55),
                         fontSize: 12,
@@ -247,41 +256,8 @@ class _HomeHero extends StatelessWidget {
   }
 }
 
-class _EmptyConnect extends StatelessWidget {
-  const _EmptyConnect({this.onOpenProfile});
-
-  final VoidCallback? onOpenProfile;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.account_balance_wallet_outlined,
-          size: 40,
-          color: AppTheme.ink.withValues(alpha: 0.35),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          'Connect a wallet to see your escrows.',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.ink.withValues(alpha: 0.7),
-              ),
-        ),
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: onOpenProfile,
-          child: const Text('Open Profile'),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyContracts extends StatelessWidget {
-  const _EmptyContracts({this.onOpenCreate});
+class _EmptyListings extends StatelessWidget {
+  const _EmptyListings({this.onOpenCreate});
 
   final VoidCallback? onOpenCreate;
 
@@ -291,13 +267,13 @@ class _EmptyContracts extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(
-          Icons.inbox_outlined,
+          Icons.storefront_outlined,
           size: 40,
           color: AppTheme.ink.withValues(alpha: 0.35),
         ),
         const SizedBox(height: 14),
         Text(
-          'No contracts yet for this wallet.',
+          'No active listings yet.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: AppTheme.ink.withValues(alpha: 0.7),
@@ -305,7 +281,7 @@ class _EmptyContracts extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Tap Create or + for Escrow sur mesure (blocks or quick form).',
+          'Mint a demo NFT, approve SDT, then list it for ETH.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppTheme.ink.withValues(alpha: 0.5),
@@ -314,7 +290,7 @@ class _EmptyContracts extends StatelessWidget {
         const SizedBox(height: 16),
         OutlinedButton(
           onPressed: onOpenCreate,
-          child: const Text('Escrow sur mesure'),
+          child: const Text('Sell or mint'),
         ),
       ],
     );

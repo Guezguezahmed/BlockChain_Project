@@ -1,13 +1,14 @@
-# App — Phase 2 MVP
+# App — Smart Deal marketplace (v0.4)
 
 Implemented:
 
+- **Primary product:** peer NFT marketplace on Sepolia (SDT fee + stake, ETH buy, ownership transfer)
 - Clean architecture: `presentation` / `domain` / `data`
-- `ContractRepository` + `MockContractRepository` + `ChainContractRepository` (web3dart)
-- Wallet: Reown AppKit (WalletConnect) → MetaMask, Sepolia only; mock wallet for UI
-- Screens: Home, Wallet, Preset picker, Create Escrow, Escrow block builder (Scratch MVP), My Contracts, Contract detail (state-aware actions)
-- Config via `--dart-define` (`FACTORY_ADDRESS`, `SEPOLIA_RPC_URL`, `WALLETCONNECT_PROJECT_ID`, `USE_MOCK`)
-- Live Sepolia Factory default: `0x0E847b5Dccd09e73199e3689fC4D0D25A0133F08` (Escrow impl `0x4bb80444D6669588F7bf1ed6b0EFE71B7Aacf25E`)
-- Chain mode: `USE_MOCK=false` + `WALLETCONNECT_PROJECT_ID` from https://cloud.reown.com
+- `MarketplaceRepository` + mock + chain (Marketplace / SDT / SmartDealNFT ABIs)
+- `ContractRepository` kept for advanced custom Escrow path
+- Wallet: Reown AppKit → MetaMask, Sepolia only; mock wallet for UI / tests
+- Screens: Home (listings), Mint NFT, List NFT, Listing detail (buy/cancel), Profile (+ SDT faucet note); Escrow create/detail still available from create sheet
+- Config via `--dart-define` (`SDT_ADDRESS`, `NFT_ADDRESS`, `MARKETPLACE_ADDRESS`, `FACTORY_ADDRESS`, `SEPOLIA_RPC_URL`, `WALLETCONNECT_PROJECT_ID`, `USE_MOCK`)
+- Live defaults wired to Sepolia deploy from docs/sepolia-smart-deal-addresses.md
 
-Not in this phase: backend indexer / `IndexedContractRepository` (Phase 3), Explore page (Phase 4).
+Not in this phase: Nest/Mongo indexer, physical goods, contract redeploys.
