@@ -36,7 +36,7 @@ class MyContractsScreen extends ConsumerWidget {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => const WalletScreen(),
+                          builder: (_) => const WalletScreen(embedded: false),
                         ),
                       );
                     },

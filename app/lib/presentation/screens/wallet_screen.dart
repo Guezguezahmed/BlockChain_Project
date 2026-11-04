@@ -8,7 +8,10 @@ import '../../data/wallet/reown_wallet_service.dart';
 import '../providers/app_providers.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
-  const WalletScreen({super.key});
+  const WalletScreen({super.key, this.embedded = false});
+
+  /// When true (Profile tab), hide the back-oriented AppBar chrome.
+  final bool embedded;
 
   @override
   ConsumerState<WalletScreen> createState() => _WalletScreenState();
@@ -59,10 +62,19 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
     final wallet = ref.watch(walletServiceProvider);
     final reown = wallet is ReownWalletService ? wallet : null;
 
+    final bottomPad = widget.embedded
+        ? MediaQuery.paddingOf(context).bottom + 96
+        : 20.0;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Wallet')),
+      appBar: widget.embedded
+          ? AppBar(
+              title: const Text('Profile'),
+              automaticallyImplyLeading: false,
+            )
+          : AppBar(title: const Text('Wallet')),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPad),
         children: [
           Text(
             'Connect with MetaMask via Reown AppKit (WalletConnect). '

@@ -50,8 +50,31 @@ class AppTheme {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
       cardColor: Colors.white.withValues(alpha: 0.55),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: _accent,
+        foregroundColor: _ink,
+        elevation: 3,
+        shape: CircleBorder(),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Color(0xFFF4FAF7),
+        surfaceTintColor: Colors.transparent,
+        dragHandleColor: Color(0xFF9BB5AD),
+        showDragHandle: true,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+      bottomAppBarTheme: const BottomAppBarThemeData(
+        color: Color(0xFFF4FAF7),
+        elevation: 8,
+        padding: EdgeInsets.zero,
+      ),
     );
   }
+
+  /// Soft sand sibling used by sheets / bottom bar (same family as [_sand]).
+  static Color get shellSurface => const Color(0xFFF4FAF7);
 
   static LinearGradient get heroGradient => const LinearGradient(
         begin: Alignment.topLeft,
@@ -64,6 +87,7 @@ class AppTheme {
       );
 
   static Color get accent => _accent;
+  static Color get accentDim => _accentDim;
   static Color get ink => _ink;
   static Color get panel => _panel;
 }
